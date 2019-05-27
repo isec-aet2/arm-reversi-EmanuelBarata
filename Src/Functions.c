@@ -5,10 +5,9 @@
  *      Author: Utilizador
  */
 
-# include "Functions.h"
+#include "Functions.h"
 #include "stm32f769i_discovery_lcd.h"
 #include "stm32f769i_discovery.h"
-#include "main.h"
 
 
 void printBoard(int x0, int y0, int dimension, int xLength, int yLength){
@@ -40,18 +39,22 @@ void printBoard(int x0, int y0, int dimension, int xLength, int yLength){
       }
 }
 
-int placePiece(int x0, int y0, int player){
 
+
+int placePiece(int x0, int y0, int player){
 
 	int inBoard=0;
 	BSP_LCD_SetFont(&Font20);
 
-	if(player%2==0)
+	if(player%2==0){
 	  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-	else
+	  player=PLAYERWHITE;
+	}
+
+	else{
 	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-
-
+	  player=PLAYERBLACK;
+	}
 
 	for(int i = boardX0, j = boardX0 + boardPlaceWidth; i <= boardX0 * DIMENSION; i+=boardPlaceWidth, j+=boardPlaceWidth){
 
@@ -72,12 +75,48 @@ int placePiece(int x0, int y0, int player){
 	}
 
 	if(inBoard==2){
-
 		BSP_LCD_DrawCircle(x0, y0, 20);
 		BSP_LCD_FillCircle(x0, y0, 20);
-		player++;
 	}
 
 	return player;
+
+}
+
+
+
+void possiblePlace(int Xpos, int Ypos, int player){
+
+	uint32_t ColorArray[]={LCD_COLOR_WHITE,LCD_COLOR_BLACK};
+
+	if(BSP_LCD_ReadPixel(Xpos+boardPlaceWidth,Ypos+boardPlaceHeight)==LCD_COLOR_GRAY){
+
+		for(int dx = -1; dx < 2; dx++){
+			for(int dy = -1; dy < 2; dy++){
+
+				if(BSP_LCD_ReadPixel(Xpos+(0.5+dx)*boardPlaceWidth,Ypos+(0.5+dy)*boardPlaceHeight)==ColorArray[player]){
+
+					BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGREEN);
+					BSP_LCD_DrawRect(Xpos, Ypos, boardPlaceWidth, boardPlaceHeight);
+					return;
+
+				}
+
+			}
+
+		}
+	}
+}
+
+
+void findPossiblePlaces(int player){
+
+    for(int i=boardX0; i<=DIMENSION*boardPlaceWidth; i+=boardPlaceWidth){
+        for(int j=boardY0 ; j<=DIMENSION*boardPlaceHeight; j+=boardPlaceHeight){
+
+        	possiblePlace(i, j, player);
+
+        }
+    }
 
 }

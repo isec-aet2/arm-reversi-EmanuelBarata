@@ -60,12 +60,6 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN Private defines */
 
-#define boardX0					50
-#define boardY0 				50
-#define DIMENSION 				8
-#define boardPlaceWidth			50
-#define boardPlaceHeight		50
-
 
 /* USER CODE END Private defines */
 

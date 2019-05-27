@@ -23,11 +23,31 @@
 #ifndef __Functions_H
 #define __Functions_H
 
+#include "stm32f769i_discovery.h"
+
+
+#define boardX0					50
+#define boardY0 				50
+#define DIMENSION 				8
+#define boardPlaceWidth			50
+#define boardPlaceHeight		50
+
+#define PLAYERWHITE				1
+#define PLAYERBLACK				0
+
+
+typedef struct Piece{
+	uint32_t color;
+	int posX;
+	int posY;
+}tPiece;
 
 
 
 void printBoard(int x0, int y0, int dimension, int xLength, int yLength);
 int placePiece(int x0, int y0, int player);
+void possiblePlace(int Xpos, int Ypos, int player);
+void findPossiblePlaces(int player);
 
 
 

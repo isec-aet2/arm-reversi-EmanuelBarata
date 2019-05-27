@@ -73,10 +73,13 @@ SDRAM_HandleTypeDef hsdram1;
 
 int timerCounter=0;
 int timerFlag=0;
+
 TS_StateTypeDef TS_State;
 int tsFlag=0;
-int playerTurn=1;
 
+int playerTurn=PLAYERWHITE;
+
+tPiece posArray[DIMENSION*DIMENSION];
 
 uint32_t ConvertedValue;
 
@@ -130,7 +133,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}
 
 }
-
 
 
 /* USER CODE END 0 */
@@ -194,6 +196,11 @@ int main(void)
   HAL_ADC_Start_IT(&hadc1);
 
   printBoard(boardX0, boardY0 , DIMENSION, boardPlaceWidth, boardPlaceHeight);
+  findPossiblePlaces(playerTurn);
+  //possiblePlace(boardX0, boardY0,playerTurn);
+  //possiblePlace((DIMENSION/2)*boardPlaceWidth,(DIMENSION/2)*boardPlaceHeight-boardPlaceHeight,playerTurn);
+  //possiblePlace((DIMENSION/2)*boardPlaceWidth+boardPlaceWidth,(DIMENSION/2)*boardPlaceHeight-boardPlaceHeight,playerTurn);
+
 
   /* USER CODE END 2 */
 
@@ -223,6 +230,7 @@ int main(void)
 
 		  tsFlag=0;
 		  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
+		  //possiblePlace();
 
 
 	  }
