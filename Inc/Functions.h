@@ -24,7 +24,10 @@
 #define __Functions_H
 
 
+
+
 void printBoard(int x0, int y0, int dimension, int xLength, int yLength);
+int placePiece(int x0, int y0, int player);
 
 
 

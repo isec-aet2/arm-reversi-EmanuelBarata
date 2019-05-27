@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include "stm32f769i_discovery_lcd.h"
 #include "stm32f769i_discovery.h"
+#include "stm32f769i_discovery_ts.h"
 
 #include "Functions.h"
 
@@ -46,7 +47,6 @@
 #define VSENS_AT_AMBIENT_TEMP  760    /* VSENSE value (mv) at ambient temperature */
 #define AVG_SLOPE               25    /* Avg_Solpe multiply by 10 */
 #define VREF                  3300
-
 
 
 /* USER CODE END PD */
@@ -73,6 +73,10 @@ SDRAM_HandleTypeDef hsdram1;
 
 int timerCounter=0;
 int timerFlag=0;
+TS_StateTypeDef TS_State;
+int tsFlag=0;
+int playerTurn=1;
+
 
 uint32_t ConvertedValue;
 
@@ -112,6 +116,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+
+	if(GPIO_Pin == GPIO_PIN_13){
+
+		BSP_TS_GetState(&TS_State);
+		HAL_Delay(100);
+
+		if(TS_State.touchDetected)
+
+			tsFlag=1;
+
+	}
+
+}
+
 
 
 /* USER CODE END 0 */
@@ -124,9 +143,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
-
 	uint32_t JTemp;
-	char desc[100];
+	char tempString[100];
+	//char tsString[20];
 
   /* USER CODE END 1 */
   
@@ -165,14 +184,16 @@ int main(void)
 
   BSP_LCD_Init();
   BSP_LCD_LayerDefaultInit(LTDC_ACTIVE_LAYER_BACKGROUND,LCD_FB_START_ADDRESS);
-
   BSP_LCD_Clear(LCD_COLOR_WHITE);
-  BSP_LCD_SetTextColor(LCD_COLOR_DARKMAGENTA);
+
+
+  BSP_TS_Init(800,480);
+  BSP_TS_ITConfig();
 
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_ADC_Start_IT(&hadc1);
 
-  printBoard(50, 50, 8, 50, 50);
+  printBoard(boardX0, boardY0 , DIMENSION, boardPlaceWidth, boardPlaceHeight);
 
   /* USER CODE END 2 */
 
@@ -185,17 +206,26 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-
 	  if(timerFlag){
+
 		timerFlag=0;
+
 		JTemp = ((((ConvertedValue * VREF)/MAX_CONVERTED_VALUE) - VSENS_AT_AMBIENT_TEMP) * 10 / AVG_SLOPE) + AMBIENT_TEMP;
 		/* Display the Temperature Value on the LCD */
-		sprintf(desc, "Temp: %ld deg. Celsius ", JTemp);
+		sprintf(tempString, "Temp: %ld deg. Celsius ", JTemp);
 		BSP_LCD_ClearStringLine(1);
 		BSP_LCD_SetFont(&Font12);
-		BSP_LCD_DisplayStringAtLine(1, (uint8_t *)desc);
+		BSP_LCD_SetTextColor(LCD_COLOR_DARKMAGENTA);
+		BSP_LCD_DisplayStringAtLine(2, (uint8_t *)tempString);
 		}
 
+	  if(tsFlag){
+
+		  tsFlag=0;
+		  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
+
+
+	  }
 
   }
   /* USER CODE END 3 */
@@ -633,6 +663,7 @@ static void MX_FMC_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOB_CLK_ENABLE();
@@ -643,6 +674,16 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOJ_CLK_ENABLE();
+
+  /*Configure GPIO pin : PI13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
