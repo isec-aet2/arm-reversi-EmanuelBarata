@@ -42,31 +42,41 @@ void printBoard(int x0, int y0, int dimension, int xLength, int yLength){
 
 int placePiece(int x0, int y0, int player){
 
+
+	int inBoard=0;
+	BSP_LCD_SetFont(&Font20);
+
 	if(player%2==0)
 	  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 	else
 	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 
-	player++;
+
 
 	for(int i = boardX0, j = boardX0 + boardPlaceWidth; i <= boardX0 * DIMENSION; i+=boardPlaceWidth, j+=boardPlaceWidth){
 
-		if(x0 >= i && x0 < j)
+		if(x0 >= i && x0 < j){
 			x0=i+boardPlaceWidth/2;
+			inBoard++;
+		}
 
 	}
 
 	for(int i = boardY0, j = boardY0 + boardPlaceHeight; i <= boardY0 * DIMENSION; i+=boardPlaceHeight, j+=boardPlaceHeight){
 
-		if(y0 >= i && y0 < j)
+		if(y0 >= i && y0 < j){
 			y0=i+boardPlaceHeight/2;
+			inBoard++;
+		}
 
 	}
 
+	if(inBoard==2){
 
-	BSP_LCD_SetFont(&Font20);
-	BSP_LCD_DrawCircle(x0, y0, 20);
-	BSP_LCD_FillCircle(x0, y0, 20);
+		BSP_LCD_DrawCircle(x0, y0, 20);
+		BSP_LCD_FillCircle(x0, y0, 20);
+		player++;
+	}
 
 	return player;
 
