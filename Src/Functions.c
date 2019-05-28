@@ -63,21 +63,28 @@ int placePiece(int x0, int y0, int player){
 
 	if(inBoard==2){
 
-		if(BSP_LCD_ReadPixel(x0-boardPlaceWidth/2,y0)==LCD_COLOR_LIGHTGREEN){				//Provavelmente colocar
-			if(BSP_LCD_ReadPixel(x0+boardPlaceWidth/2,y0)==LCD_COLOR_LIGHTGREEN){			//4 condicionantes
+		if(BSP_LCD_ReadPixel(x0-boardPlaceWidth/2,y0)==LCD_COLOR_LIGHTGREEN){
+			if(BSP_LCD_ReadPixel(x0+boardPlaceWidth/2,y0)==LCD_COLOR_LIGHTGREEN){
+				if(BSP_LCD_ReadPixel(x0,y0+boardPlaceHeight/2)==LCD_COLOR_LIGHTGREEN){
+					if(BSP_LCD_ReadPixel(x0,y0-boardPlaceHeight/2)==LCD_COLOR_LIGHTGREEN){
 
-				if(player%2==0){
-				  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-				  player=PLAYERWHITE;
+						if(BSP_LCD_ReadPixel(x0,y0)==LCD_COLOR_LIGHTGRAY){
+
+							if(player%2==0){
+							  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+							  player=PLAYERWHITE;
+							}
+
+							else{
+							  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+							  player=PLAYERBLACK;
+							}
+
+							BSP_LCD_DrawCircle(x0, y0, 20);
+							BSP_LCD_FillCircle(x0, y0, 20);
+						}
+					}
 				}
-
-				else{
-				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-				  player=PLAYERBLACK;
-				}
-
-				BSP_LCD_DrawCircle(x0, y0, 20);
-				BSP_LCD_FillCircle(x0, y0, 20);
 			}
 		}
 	}
@@ -91,7 +98,7 @@ void possiblePlace(int Xpos, int Ypos, int player){
 
 	uint32_t ColorArray[]={LCD_COLOR_WHITE,LCD_COLOR_BLACK};
 
-	if(BSP_LCD_ReadPixel(Xpos+boardPlaceWidth,Ypos+boardPlaceHeight)==LCD_COLOR_GRAY){
+	if(BSP_LCD_ReadPixel(Xpos+boardPlaceWidth/2,Ypos+boardPlaceHeight/2)==LCD_COLOR_LIGHTGRAY){
 
 		for(int dx = -1; dx < 2; dx++){
 			for(int dy = -1; dy < 2; dy++){
