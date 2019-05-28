@@ -124,7 +124,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if(GPIO_Pin == GPIO_PIN_13){
 
 		BSP_TS_GetState(&TS_State);
-		HAL_Delay(100);
+		HAL_Delay(11);
 
 		if(TS_State.touchDetected)
 
@@ -197,9 +197,6 @@ int main(void)
 
   printBoard(boardX0, boardY0 , DIMENSION, boardPlaceWidth, boardPlaceHeight);
   findPossiblePlaces(playerTurn);
-  //possiblePlace(boardX0, boardY0,playerTurn);
-  //possiblePlace((DIMENSION/2)*boardPlaceWidth,(DIMENSION/2)*boardPlaceHeight-boardPlaceHeight,playerTurn);
-  //possiblePlace((DIMENSION/2)*boardPlaceWidth+boardPlaceWidth,(DIMENSION/2)*boardPlaceHeight-boardPlaceHeight,playerTurn);
 
 
   /* USER CODE END 2 */
@@ -212,6 +209,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+	  findPossiblePlaces(playerTurn);
 
 	  if(timerFlag){
 
@@ -230,7 +229,7 @@ int main(void)
 
 		  tsFlag=0;
 		  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
-		  //possiblePlace();
+		  refreshBoard();
 
 
 	  }

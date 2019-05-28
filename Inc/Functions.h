@@ -48,6 +48,7 @@ void printBoard(int x0, int y0, int dimension, int xLength, int yLength);
 int placePiece(int x0, int y0, int player);
 void possiblePlace(int Xpos, int Ypos, int player);
 void findPossiblePlaces(int player);
+void refreshBoard();
 
 
 
