@@ -74,6 +74,9 @@ SDRAM_HandleTypeDef hsdram1;
 int timerCounter=0;
 int timerFlag=0;
 
+BOOL pbFlag=0;
+BOOL displayMenu;
+
 TS_StateTypeDef TS_State;
 int tsFlag=0;
 
@@ -148,6 +151,7 @@ int main(void)
 
 	uint32_t JTemp;
 	char tempString[100];
+	int xSize;
 	//char tsString[20];
 
   /* USER CODE END 1 */
@@ -188,6 +192,7 @@ int main(void)
   BSP_LCD_Init();
   BSP_LCD_LayerDefaultInit(LTDC_ACTIVE_LAYER_BACKGROUND,LCD_FB_START_ADDRESS);
   BSP_LCD_Clear(LCD_COLOR_WHITE);
+  xSize=BSP_LCD_GetXSize();
 
 
   BSP_TS_Init(800,480);
@@ -196,8 +201,12 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_ADC_Start_IT(&hadc1);
 
-  printBoard(boardX0, boardY0 , DIMENSION, boardPlaceWidth, boardPlaceHeight);
-  findPossiblePlaces(playerTurn);
+  displayMenu=TRUE;
+
+  //MENU();
+
+  //printBoard(boardX0, boardY0 , DIMENSION, boardPlaceWidth, boardPlaceHeight);
+  //findPossiblePlaces(playerTurn);
 
 
   /* USER CODE END 2 */
@@ -220,19 +229,45 @@ int main(void)
 		JTemp = ((((ConvertedValue * VREF)/MAX_CONVERTED_VALUE) - VSENS_AT_AMBIENT_TEMP) * 10 / AVG_SLOPE) + AMBIENT_TEMP;
 		/* Display the Temperature Value on the LCD */
 		sprintf(tempString, "Temp: %ld deg. Celsius ", JTemp);
+		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 		BSP_LCD_ClearStringLine(1);
 		BSP_LCD_SetFont(&Font12);
 		BSP_LCD_SetTextColor(LCD_COLOR_DARKMAGENTA);
 		BSP_LCD_DisplayStringAtLine(2, (uint8_t *)tempString);
 		}
 
-	  if(tsFlag){
+	  if(displayMenu){
 
-		  tsFlag=0;
-		  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
-		  refreshBoard();
+		  MENU();
+
+		  if(tsFlag){
+
+			  displayMenu=selectMenuOption((int)TS_State.touchX[0], (int)TS_State.touchY[0],displayMenu);
+			  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+			  BSP_LCD_FillRect(xSize/2-OPTION1X0SUB, TITLEY0, OPTION1WIDTH+50, 100);
+			  BSP_LCD_FillRect(xSize/2-OPTION1X0SUB, OPTION1Y0, OPTION1WIDTH+1, OPTION1HEIGHT+1);
+
+		  }
+
+		  if(!displayMenu){
+
+			  printBoard(boardX0, boardY0 , DIMENSION, boardPlaceWidth, boardPlaceHeight);
+			  findPossiblePlaces(playerTurn);
+
+		  }
+
+	  }
+
+	  else{
+
+		  if(tsFlag){
+
+			  tsFlag=0;
+			  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
+			  refreshBoard();
 
 
+		  }
 	  }
 
   }

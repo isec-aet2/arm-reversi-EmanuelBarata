@@ -35,6 +35,15 @@
 #define PLAYERWHITE				1
 #define PLAYERBLACK				0
 
+#define OPTION1X0SUB			100
+#define OPTION1Y0				200
+#define OPTION1Y0SUM			20
+#define OPTION1WIDTH			200
+#define OPTION1HEIGHT			60
+
+#define TITLEX0					0
+#define TITLEY0					100
+
 typedef enum bool{FALSE, TRUE} BOOL;
 
 typedef struct Piece{
@@ -56,6 +65,8 @@ void findPossiblePlaces(int player);
 
 void refreshBoard();
 
+void MENU();
+BOOL selectMenuOption(int x, int y, BOOL menuState);
 
 
 

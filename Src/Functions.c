@@ -8,6 +8,7 @@
 #include "Functions.h"
 #include "stm32f769i_discovery_lcd.h"
 #include "stm32f769i_discovery.h"
+#include <stdio.h>
 
 
 void printBoard(int x0, int y0, int dimension, int xLength, int yLength){
@@ -266,4 +267,64 @@ void transColor(int Xpos, int Ypos, int player){
 
 }
 
+
+void MENU(){
+
+	char title[100];
+	char option1[100];
+
+	int xSize;
+	//int YSize;
+
+	BSP_LCD_SetTextColor(0xFF606060);
+	BSP_LCD_SetFont(&Font24);
+
+	sprintf(title,"REVERSI ISREVER");
+	sprintf(option1,"START GAME");
+
+	BSP_LCD_DisplayStringAt(TITLEX0	, TITLEY0, (uint8_t *) title, CENTER_MODE);
+
+	xSize=BSP_LCD_GetXSize();
+	//YSize=BSP_LCD_GetYSize();
+
+	BSP_LCD_DrawRect(xSize/2-OPTION1X0SUB, OPTION1Y0, OPTION1WIDTH, OPTION1HEIGHT);
+
+	BSP_LCD_SetFont(&Font20);
+	BSP_LCD_DisplayStringAt(TITLEX0, OPTION1Y0+OPTION1Y0SUM, (uint8_t *) option1, CENTER_MODE);
+
+}
+
+BOOL selectMenuOption(int x, int y, BOOL menuState){
+
+	int xSize=BSP_LCD_GetXSize();
+
+	int pX0 = xSize/2-OPTION1X0SUB;
+	int pXF = pX0 + OPTION1WIDTH;
+	int pY0 = OPTION1Y0;
+	int pYF = OPTION1Y0+OPTION1HEIGHT;
+
+	char option1[100];
+
+
+	if(x > pX0 && x < pXF && y > pY0  && y < pYF ){
+
+			BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGRAY);
+			BSP_LCD_FillRect(pX0, pY0, OPTION1WIDTH, OPTION1HEIGHT);
+
+			BSP_LCD_SetFont(&Font20);
+			BSP_LCD_SetBackColor(LCD_COLOR_LIGHTGRAY);
+			BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGREEN);
+
+			sprintf(option1,"START GAME");
+			BSP_LCD_DisplayStringAt(TITLEX0, OPTION1Y0+OPTION1Y0SUM, (uint8_t *) option1, CENTER_MODE);
+
+			HAL_Delay(500);
+
+			return FALSE;
+
+	}
+
+	return TRUE;
+
+}
 
