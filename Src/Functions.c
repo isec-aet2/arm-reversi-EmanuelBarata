@@ -11,33 +11,90 @@
 #include <stdio.h>
 
 
-void printBoard(int x0, int y0, int dimension, int xLength, int yLength){
-      for(int i=x0; i<=dimension*xLength; i+=xLength){
-          for(int j=y0; j<=dimension*yLength; j+=yLength){
+void printBoard(){
 
-              BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGRAY);
-              BSP_LCD_FillRect(i, j, xLength, yLength);
-        	  BSP_LCD_SetTextColor(LCD_COLOR_GRAY);
-              BSP_LCD_DrawRect(i, j, xLength, yLength);
+	int posX0 = boardX0;
+	int posXF = boardX0 + DIMENSION*boardPlaceWidth;
+	int xLength = boardPlaceWidth;
+	int posY0 = boardY0;
+	int posYF = boardY0 + DIMENSION*boardPlaceHeight;
+	int yLength = boardPlaceHeight;
 
-              if ( ( i==(dimension/2)*xLength && j == (dimension/2)*yLength ) || (  i==(dimension/2 +1 )*xLength && j == (dimension/2 +1 )*yLength ) ){
+	for(int i = posX0; i < posXF; i += xLength){
 
-            	  BSP_LCD_SetFont(&Font20);
-            	  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-            	  BSP_LCD_DrawCircle(i+xLength/2.0, j+yLength/2.0, 20);
-            	  BSP_LCD_FillCircle(i+xLength/2, j+yLength/2, 20);
-              }
-              else if( ( i==(dimension/2+1)*xLength && j == (dimension/2)*yLength ) || (  i==(dimension/2)*xLength && j == (dimension/2 +1 )*yLength ) ){
+		for(int j = posY0; j < posYF; j += yLength){
 
-            	  BSP_LCD_SetFont(&Font20);
-            	  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-            	  BSP_LCD_DrawCircle(i+xLength/2.0, j+yLength/2.0, 20);
-            	  BSP_LCD_FillCircle(i+xLength/2, j+yLength/2, 20);
+			BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGRAY);
+			BSP_LCD_FillRect(i, j, xLength, yLength);
+			BSP_LCD_SetTextColor(LCD_COLOR_GRAY);
+			BSP_LCD_DrawRect(i, j, xLength, yLength);
+
+			if ( ( i==(DIMENSION/2)*xLength && j == (DIMENSION/2)*yLength ) || (  i==(DIMENSION/2 +1 )*xLength && j == (DIMENSION/2 +1 )*yLength ) ){
+
+			  BSP_LCD_SetFont(&Font20);
+			  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+			  BSP_LCD_DrawCircle(i+xLength/2.0, j+yLength/2.0, 20);
+			  BSP_LCD_FillCircle(i+xLength/2, j+yLength/2, 20);
+			}
+			else if( ( i==(DIMENSION/2+1)*xLength && j == (DIMENSION/2)*yLength ) || (  i==(DIMENSION/2)*xLength && j == (DIMENSION/2 +1 )*yLength ) ){
+
+			  BSP_LCD_SetFont(&Font20);
+			  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+			  BSP_LCD_DrawCircle(i+xLength/2.0, j+yLength/2.0, 20);
+			  BSP_LCD_FillCircle(i+xLength/2, j+yLength/2, 20);
+
+			}
+		}
+	}
+
+}
+
+void gameStats(int player){
+
+	int pieceCountW;
+	int pieceCountB;
+
+	char title[STRSIZE];
+	char playerName[STRSIZE];
+	char timeTotal[STRSIZE];
+	char timePlay[STRSIZE];
+	char p1Score[STRSIZE];
+	char p2Score[STRSIZE];
+
+	pieceCountW = countPieces(PLAYERWHITE);
+	pieceCountB = countPieces(PLAYERBLACK);
 
 
-              }
-          }
-      }
+	sprintf(title,"GAME STATS");
+	sprintf(timeTotal,"GAME TIME:");
+	sprintf(timePlay, "REMAINING TIME:");
+
+	sprintf(p1Score,"SNOW WHITE: %i", pieceCountW);
+	sprintf(p2Score,"BLACK JACK: %i", pieceCountB);
+
+	if(player){
+		sprintf(playerName,"PLAYER 1: SNOW WHITE");
+	}
+
+	else{
+		sprintf(playerName,"PLAYER 2: BLACK JACK");
+	}
+
+
+	BSP_LCD_SetTextColor(0xFF606060);
+
+	BSP_LCD_SetFont(&Font20);
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0, (uint8_t*) title, LEFT_MODE);
+
+	BSP_LCD_SetFont(&Font16);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+100, (uint8_t*) playerName, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+150, (uint8_t*) timeTotal, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+200, (uint8_t*) timePlay, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+250, (uint8_t*) p1Score, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+300, (uint8_t*) p2Score, LEFT_MODE);
+
+
 }
 
 
@@ -267,6 +324,32 @@ void transColor(int Xpos, int Ypos, int player){
 
 }
 
+int countPieces(int player){
+
+	uint32_t ColorArray[]={LCD_COLOR_BLACK,LCD_COLOR_WHITE};
+	int pieceCounter=0;
+
+	int posX0=boardX0 + boardPlaceWidth/2;
+	int posXF= posX0+(DIMENSION*boardPlaceWidth);
+	int posY0=boardY0 + boardPlaceHeight/2;
+	int posYF= posY0+(DIMENSION*boardPlaceHeight);
+
+	for(int i = posX0; i < posXF; i+=boardPlaceWidth){
+		for(int j = posY0; j < posYF; j+=boardPlaceHeight){
+
+			if(BSP_LCD_ReadPixel(i,j) == ColorArray[player]){
+
+				pieceCounter++;
+
+
+			}
+
+		}
+	}
+
+	return pieceCounter;
+
+}
 
 void MENU(){
 
@@ -319,6 +402,10 @@ BOOL selectMenuOption(int x, int y, BOOL menuState){
 			BSP_LCD_DisplayStringAt(TITLEX0, OPTION1Y0+OPTION1Y0SUM, (uint8_t *) option1, CENTER_MODE);
 
 			HAL_Delay(500);
+
+			BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+			BSP_LCD_FillRect(xSize/2-OPTION1X0SUB, TITLEY0, OPTION1WIDTH+50, 100);
+			BSP_LCD_FillRect(xSize/2-OPTION1X0SUB, OPTION1Y0, OPTION1WIDTH+1, OPTION1HEIGHT+1);
 
 			return FALSE;
 

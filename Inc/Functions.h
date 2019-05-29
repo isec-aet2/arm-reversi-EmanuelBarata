@@ -44,6 +44,9 @@
 #define TITLEX0					0
 #define TITLEY0					100
 
+#define STATSX0					500
+#define STRSIZE					100
+
 typedef enum bool{FALSE, TRUE} BOOL;
 
 typedef struct Piece{
@@ -54,11 +57,12 @@ typedef struct Piece{
 
 
 
-void printBoard(int x0, int y0, int dimension, int xLength, int yLength);
+void printBoard();
+void gameStats(int player);
 
 int placePiece(int x0, int y0, int player);
 void transColor(int Xpos, int Ypos, int player);
-
+int countPieces(int player);
 BOOL verifyEncapsulate(int Xpos, int Ypos, int player);
 void possiblePlace(int Xpos, int Ypos, int player);
 void findPossiblePlaces(int player);

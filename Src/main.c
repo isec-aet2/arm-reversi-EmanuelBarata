@@ -140,7 +140,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 		pbFlag=TRUE;
 
-
 	}
 
 }
@@ -213,11 +212,6 @@ int main(void)
   displayMenu=TRUE;
   pbFlag=FALSE;
 
-  //MENU();
-
-  //printBoard(boardX0, boardY0 , DIMENSION, boardPlaceWidth, boardPlaceHeight);
-  //findPossiblePlaces(playerTurn);
-
 
   /* USER CODE END 2 */
 
@@ -253,15 +247,13 @@ int main(void)
 		  if(tsFlag){
 
 			  displayMenu=selectMenuOption((int)TS_State.touchX[0], (int)TS_State.touchY[0],displayMenu);
-			  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-			  BSP_LCD_FillRect(xSize/2-OPTION1X0SUB, TITLEY0, OPTION1WIDTH+50, 100);
-			  BSP_LCD_FillRect(xSize/2-OPTION1X0SUB, OPTION1Y0, OPTION1WIDTH+1, OPTION1HEIGHT+1);
 
 		  }
 
 		  if(!displayMenu){
 
-			  printBoard(boardX0, boardY0 , DIMENSION, boardPlaceWidth, boardPlaceHeight);
+			  printBoard();
+			  gameStats(playerTurn);
 			  findPossiblePlaces(playerTurn);
 
 		  }
@@ -274,6 +266,7 @@ int main(void)
 
 			  tsFlag=0;
 			  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
+			  gameStats(playerTurn);
 			  refreshBoard();
 
 		  }
