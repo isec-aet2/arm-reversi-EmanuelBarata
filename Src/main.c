@@ -74,7 +74,7 @@ SDRAM_HandleTypeDef hsdram1;
 int timerCounter=0;
 int timerFlag=0;
 
-BOOL pbFlag=0;
+BOOL pbFlag;
 BOOL displayMenu;
 
 TS_StateTypeDef TS_State;
@@ -136,6 +136,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 	}
 
+	if(GPIO_Pin == GPIO_PIN_0){
+
+		pbFlag=TRUE;
+
+
+	}
+
 }
 
 
@@ -152,6 +159,7 @@ int main(void)
 	uint32_t JTemp;
 	char tempString[100];
 	int xSize;
+	int ySize;
 	//char tsString[20];
 
   /* USER CODE END 1 */
@@ -193,15 +201,17 @@ int main(void)
   BSP_LCD_LayerDefaultInit(LTDC_ACTIVE_LAYER_BACKGROUND,LCD_FB_START_ADDRESS);
   BSP_LCD_Clear(LCD_COLOR_WHITE);
   xSize=BSP_LCD_GetXSize();
+  ySize=BSP_LCD_GetYSize();
 
-
-  BSP_TS_Init(800,480);
+  BSP_TS_Init(xSize,ySize);
   BSP_TS_ITConfig();
+
 
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_ADC_Start_IT(&hadc1);
 
   displayMenu=TRUE;
+  pbFlag=FALSE;
 
   //MENU();
 
@@ -266,7 +276,13 @@ int main(void)
 			  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
 			  refreshBoard();
 
+		  }
 
+		  if(pbFlag){
+			  pbFlag=FALSE;
+			  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+			  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
+			  displayMenu=TRUE;
 		  }
 	  }
 
@@ -715,6 +731,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOI_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOJ_CLK_ENABLE();
 
@@ -724,7 +741,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PA0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
