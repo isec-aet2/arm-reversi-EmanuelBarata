@@ -35,6 +35,7 @@
 #define PLAYERWHITE				1
 #define PLAYERBLACK				0
 
+typedef enum bool{FALSE, TRUE} BOOL;
 
 typedef struct Piece{
 	uint32_t color;
@@ -45,10 +46,16 @@ typedef struct Piece{
 
 
 void printBoard(int x0, int y0, int dimension, int xLength, int yLength);
+
 int placePiece(int x0, int y0, int player);
+void transColor(int Xpos, int Ypos, int player);
+
+BOOL verifyEncapsulate(int Xpos, int Ypos, int player);
 void possiblePlace(int Xpos, int Ypos, int player);
 void findPossiblePlaces(int player);
+
 void refreshBoard();
+
 
 
 

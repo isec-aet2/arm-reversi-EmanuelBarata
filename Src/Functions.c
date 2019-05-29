@@ -70,6 +70,8 @@ int placePiece(int x0, int y0, int player){
 
 						if(BSP_LCD_ReadPixel(x0,y0)==LCD_COLOR_LIGHTGRAY){
 
+							transColor(x0-boardPlaceWidth/2, y0-boardPlaceHeight/2, player);
+
 							if(player%2==0){
 							  BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 							  player=PLAYERWHITE;
@@ -82,6 +84,9 @@ int placePiece(int x0, int y0, int player){
 
 							BSP_LCD_DrawCircle(x0, y0, 20);
 							BSP_LCD_FillCircle(x0, y0, 20);
+
+
+
 						}
 					}
 				}
@@ -108,9 +113,12 @@ void possiblePlace(int Xpos, int Ypos, int player){
 					if(Xpos+(0.5+dx)*boardPlaceWidth > boardX0 && Xpos+(0.5+dx)*boardPlaceWidth < boardX0 + DIMENSION * boardPlaceWidth)
 						if(Ypos+(0.5+dy)*boardPlaceHeight > boardY0 && Ypos+(0.5+dy)*boardPlaceHeight < boardY0 + DIMENSION * boardPlaceHeight){
 
-							BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGREEN);
-							BSP_LCD_DrawRect(Xpos, Ypos, boardPlaceWidth, boardPlaceHeight);
-							return;
+							if(verifyEncapsulate(Xpos,Ypos,player)==TRUE){
+
+								BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGREEN);
+								BSP_LCD_DrawRect(Xpos, Ypos, boardPlaceWidth, boardPlaceHeight);
+								return;
+							}
 						}
 
 				}
@@ -133,6 +141,7 @@ void findPossiblePlaces(int player){
 
 }
 
+
 void refreshBoard(){
 
 	for(int i=boardX0; i<boardX0+DIMENSION*boardPlaceWidth; i+=boardPlaceWidth){
@@ -145,3 +154,116 @@ void refreshBoard(){
 	}
 
 }
+
+
+BOOL verifyEncapsulate(int Xpos, int Ypos, int player){
+
+	int advPieces;
+
+	uint32_t ColorArray[]={LCD_COLOR_BLACK,LCD_COLOR_WHITE};
+
+	for(int dx = -1; dx < 2; dx++){
+		for(int dy = -1; dy < 2; dy++){
+
+			advPieces=0;
+
+			if(!(dx==0 && dy==0)){
+
+				for(int i=1; i<DIMENSION;i++){
+
+					if(Xpos+dx*i*boardPlaceWidth >=  boardX0  && Ypos+dy*i*boardPlaceHeight >= boardY0  && Xpos+dx*i*boardPlaceWidth <= boardX0+DIMENSION*boardPlaceWidth && Ypos+dy*i*boardPlaceHeight <= boardY0+DIMENSION*boardPlaceHeight ){
+
+
+						if(BSP_LCD_ReadPixel(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight)==LCD_COLOR_LIGHTGRAY){
+
+							break;
+						}
+
+						if(BSP_LCD_ReadPixel(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight)==ColorArray[!player]){
+
+							advPieces++;
+
+						}
+
+						if(BSP_LCD_ReadPixel(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight)==ColorArray[player]){
+
+							if(advPieces>0){
+
+								return TRUE;
+							}
+
+							else{
+
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return FALSE;
+
+}
+
+void transColor(int Xpos, int Ypos, int player){
+
+	int advPieces;
+
+	uint32_t ColorArray[]={LCD_COLOR_BLACK,LCD_COLOR_WHITE};
+
+	for(int dx = -1; dx < 2; dx++){
+		for(int dy = -1; dy < 2; dy++){
+
+			advPieces=0;
+
+			if(!(dx==0 && dy==0)){
+
+				for(int i=1; i<DIMENSION;i++){
+
+					if(Xpos+dx*i*boardPlaceWidth >=  boardX0  && Ypos+dy*i*boardPlaceHeight >= boardY0  && Xpos+dx*i*boardPlaceWidth <= boardX0+DIMENSION*boardPlaceWidth && Ypos+dy*i*boardPlaceHeight <= boardY0+DIMENSION*boardPlaceHeight ){
+
+
+						if(BSP_LCD_ReadPixel(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight)==LCD_COLOR_LIGHTGRAY){
+
+							break;
+						}
+
+						if(BSP_LCD_ReadPixel(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight)==ColorArray[!player]){
+
+							advPieces++;
+
+						}
+
+						if(BSP_LCD_ReadPixel(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight)==ColorArray[player]){
+
+							if(advPieces>0){
+
+								for(int i = 1; i <= advPieces; i++){
+
+									BSP_LCD_SetTextColor(ColorArray[player]);
+									BSP_LCD_DrawCircle(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight, 20);
+									BSP_LCD_FillCircle(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight, 20);
+
+
+								}
+
+							}
+
+							else{
+
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//return FALSE;
+
+}
+
+
