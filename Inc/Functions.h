@@ -57,22 +57,24 @@ typedef struct Piece{
 
 
 
-void printBoard();
-void gameStats(int player);
+void printBoard(int * TotalTime);
+void gameStats(int player, int possibleMoves);
 
 int placePiece(int x0, int y0, int player);
 void transColor(int Xpos, int Ypos, int player);
 int countPieces(int player);
 BOOL verifyEncapsulate(int Xpos, int Ypos, int player);
-void possiblePlace(int Xpos, int Ypos, int player);
-void findPossiblePlaces(int player);
+BOOL verifyVictory(int player, int possibleMoves);
+BOOL possiblePlace(int Xpos, int Ypos, int player);
+int findPossiblePlaces(int player);
 
 void refreshBoard();
 
 void MENU();
 BOOL selectMenuOption(int x, int y, BOOL menuState);
 
-
+void printTotalGameTime(int timeCount);
+int printPlayTime(int timeCount, int player);
 
 #ifdef __cplusplus
 extern "C" {

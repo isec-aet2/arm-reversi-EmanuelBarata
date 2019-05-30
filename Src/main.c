@@ -66,13 +66,15 @@ DSI_HandleTypeDef hdsi;
 LTDC_HandleTypeDef hltdc;
 
 TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim7;
 
 SDRAM_HandleTypeDef hsdram1;
 
 /* USER CODE BEGIN PV */
 
-int timerCounter=0;
 int timerFlag=0;
+int timer7Counter;
+int timerDif;
 
 BOOL pbFlag;
 BOOL displayMenu;
@@ -86,6 +88,8 @@ tPiece posArray[DIMENSION*DIMENSION];
 
 uint32_t ConvertedValue;
 
+int possiblePlaces;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,6 +101,7 @@ static void MX_LTDC_Init(void);
 static void MX_DSIHOST_DSI_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_TIM7_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -115,8 +120,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if(htim -> Instance == TIM6){
 
-        timerCounter++;
     	timerFlag=1;
+
+    }
+
+    if(htim -> Instance == TIM7){
+
+    	timer7Counter++;
+    	timerDif++;
 
     }
 
@@ -156,9 +167,12 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 	uint32_t JTemp;
-	char tempString[100];
+	char tempString[STRSIZE];
+
 	int xSize;
 	int ySize;
+
+	int playerTurnCopy;
 	//char tsString[20];
 
   /* USER CODE END 1 */
@@ -194,6 +208,7 @@ int main(void)
   MX_DSIHOST_DSI_Init();
   MX_TIM6_Init();
   MX_ADC1_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 
   BSP_LCD_Init();
@@ -207,10 +222,14 @@ int main(void)
 
 
   HAL_TIM_Base_Start_IT(&htim6);
+  HAL_TIM_Base_Start_IT(&htim7);
   HAL_ADC_Start_IT(&hadc1);
 
   displayMenu=TRUE;
   pbFlag=FALSE;
+
+  timer7Counter=0;
+  timerDif=0;
 
 
   /* USER CODE END 2 */
@@ -224,7 +243,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	  findPossiblePlaces(playerTurn);
+	  possiblePlaces=findPossiblePlaces(playerTurn);
 
 	  if(timerFlag){
 
@@ -234,10 +253,9 @@ int main(void)
 		/* Display the Temperature Value on the LCD */
 		sprintf(tempString, "Temp: %ld deg. Celsius ", JTemp);
 		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-		BSP_LCD_ClearStringLine(1);
 		BSP_LCD_SetFont(&Font12);
 		BSP_LCD_SetTextColor(LCD_COLOR_DARKMAGENTA);
-		BSP_LCD_DisplayStringAtLine(2, (uint8_t *)tempString);
+		BSP_LCD_DisplayStringAt(0, ySize-10, (uint8_t *)tempString,RIGHT_MODE);
 		}
 
 	  if(displayMenu){
@@ -252,9 +270,8 @@ int main(void)
 
 		  if(!displayMenu){
 
-			  printBoard();
-			  gameStats(playerTurn);
-			  findPossiblePlaces(playerTurn);
+			  printBoard(&timer7Counter);
+			  gameStats(playerTurn,possiblePlaces);
 
 		  }
 
@@ -262,11 +279,24 @@ int main(void)
 
 	  else{
 
+		  printTotalGameTime(timer7Counter);
+		  playerTurnCopy=playerTurn;
+		  playerTurn = printPlayTime(timerDif, playerTurn);
+
+		  if(playerTurn != playerTurnCopy){
+			  possiblePlaces=findPossiblePlaces(playerTurn);
+			  gameStats(playerTurn,possiblePlaces);
+			  refreshBoard();
+		  }
+
 		  if(tsFlag){
 
 			  tsFlag=0;
+			  timerDif=0;
+
 			  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
-			  gameStats(playerTurn);
+			  possiblePlaces=findPossiblePlaces(playerTurn);
+			  gameStats(playerTurn,possiblePlaces);
 			  refreshBoard();
 
 		  }
@@ -658,6 +688,44 @@ static void MX_TIM6_Init(void)
   /* USER CODE BEGIN TIM6_Init 2 */
 
   /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
+  * @brief TIM7 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM7_Init(void)
+{
+
+  /* USER CODE BEGIN TIM7_Init 0 */
+
+  /* USER CODE END TIM7_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM7_Init 1 */
+
+  /* USER CODE END TIM7_Init 1 */
+  htim7.Instance = TIM7;
+  htim7.Init.Prescaler = 1999;
+  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim7.Init.Period = 49999;
+  htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM7_Init 2 */
+
+  /* USER CODE END TIM7_Init 2 */
 
 }
 

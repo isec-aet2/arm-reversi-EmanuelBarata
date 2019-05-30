@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 
-void printBoard(){
+void printBoard(int * pTotalTime){
 
 	int posX0 = boardX0;
 	int posXF = boardX0 + DIMENSION*boardPlaceWidth;
@@ -19,6 +19,8 @@ void printBoard(){
 	int posY0 = boardY0;
 	int posYF = boardY0 + DIMENSION*boardPlaceHeight;
 	int yLength = boardPlaceHeight;
+
+	*pTotalTime = 0;
 
 	for(int i = posX0; i < posXF; i += xLength){
 
@@ -49,25 +51,31 @@ void printBoard(){
 
 }
 
-void gameStats(int player){
+void gameStats(int player, int possibleMoves){
 
 	int pieceCountW;
 	int pieceCountB;
 
 	char title[STRSIZE];
 	char playerName[STRSIZE];
+	char possibleMovesStr[STRSIZE];
 	char timeTotal[STRSIZE];
 	char timePlay[STRSIZE];
 	char p1Score[STRSIZE];
 	char p2Score[STRSIZE];
+
+	int xSize = BSP_LCD_GetXSize();
 
 	pieceCountW = countPieces(PLAYERWHITE);
 	pieceCountB = countPieces(PLAYERBLACK);
 
 
 	sprintf(title,"GAME STATS");
-	sprintf(timeTotal,"GAME TIME:");
-	sprintf(timePlay, "REMAINING TIME:");
+
+	sprintf(possibleMovesStr,"POSSIBLE MOVES: %i", possibleMoves);
+
+	sprintf(timeTotal,"GAME TIME (S): ");
+	sprintf(timePlay, "REMAINING TIME (S):");
 
 	sprintf(p1Score,"SNOW WHITE: %i", pieceCountW);
 	sprintf(p2Score,"BLACK JACK: %i", pieceCountB);
@@ -77,8 +85,17 @@ void gameStats(int player){
 	}
 
 	else{
-		sprintf(playerName,"PLAYER 2: BLACK JACK");
+		sprintf(playerName,"PLAYER 2: SIRIUS BLACK");
 	}
+
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+
+	BSP_LCD_FillRect(STATSX0+110, boardY0+100, xSize-(STATSX0+110), 20);
+	BSP_LCD_FillRect(STATSX0+165, boardY0+150, 50, 20);
+	//BSP_LCD_FillRect(STATSX0+160, boardY0+200, xSize-(STATSX0+160), 20);
+	//BSP_LCD_FillRect(STATSX0+210, boardY0+250, 50, 20);
+	BSP_LCD_FillRect(STATSX0+125, boardY0+300, 50, 20);
+	BSP_LCD_FillRect(STATSX0+125, boardY0+350, 50, 20);
 
 
 	BSP_LCD_SetTextColor(0xFF606060);
@@ -89,10 +106,11 @@ void gameStats(int player){
 
 	BSP_LCD_SetFont(&Font16);
 	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+100, (uint8_t*) playerName, LEFT_MODE);
-	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+150, (uint8_t*) timeTotal, LEFT_MODE);
-	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+200, (uint8_t*) timePlay, LEFT_MODE);
-	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+250, (uint8_t*) p1Score, LEFT_MODE);
-	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+300, (uint8_t*) p2Score, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+150, (uint8_t*) possibleMovesStr, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+200, (uint8_t*) timeTotal, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+250, (uint8_t*) timePlay, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+300, (uint8_t*) p1Score, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+350, (uint8_t*) p2Score, LEFT_MODE);
 
 
 }
@@ -157,7 +175,7 @@ int placePiece(int x0, int y0, int player){
 }
 
 
-void possiblePlace(int Xpos, int Ypos, int player){
+BOOL possiblePlace(int Xpos, int Ypos, int player){
 
 	uint32_t ColorArray[]={LCD_COLOR_WHITE,LCD_COLOR_BLACK};
 
@@ -175,7 +193,7 @@ void possiblePlace(int Xpos, int Ypos, int player){
 
 								BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGREEN);
 								BSP_LCD_DrawRect(Xpos, Ypos, boardPlaceWidth, boardPlaceHeight);
-								return;
+								return TRUE;
 							}
 						}
 
@@ -185,17 +203,26 @@ void possiblePlace(int Xpos, int Ypos, int player){
 
 		}
 	}
+	return FALSE;
 }
 
-void findPossiblePlaces(int player){
+int findPossiblePlaces(int player){
+
+	int countPossiblePlaces = 0;
 
     for(int i=boardX0; i<=DIMENSION*boardPlaceWidth; i+=boardPlaceWidth){
         for(int j=boardY0 ; j<=DIMENSION*boardPlaceHeight; j+=boardPlaceHeight){
 
-        	possiblePlace(i, j, player);
+        	if(possiblePlace(i, j, player)==TRUE){
+
+        		countPossiblePlaces++;
+
+        	}
 
         }
     }
+
+    return countPossiblePlaces;
 
 }
 
@@ -351,6 +378,19 @@ int countPieces(int player){
 
 }
 
+BOOL verifyVictory(int player, int possibleMoves){
+
+	if(possibleMoves==0){
+
+		return TRUE;
+	}
+
+	return FALSE;
+
+}
+
+
+
 void MENU(){
 
 	char title[100];
@@ -415,3 +455,53 @@ BOOL selectMenuOption(int x, int y, BOOL menuState){
 
 }
 
+
+void printTotalGameTime(int timeCount){
+
+	char totTime[STRSIZE];
+
+	BSP_LCD_SetTextColor(0xFF606060);
+	BSP_LCD_SetFont(&Font16);
+	sprintf(totTime,"%i", timeCount);
+
+	BSP_LCD_DisplayStringAt(STATSX0+160, boardY0+200, (uint8_t*) totTime, LEFT_MODE);
+
+
+
+
+}
+
+
+int printPlayTime(int timeCount, int player){
+
+	int playTime;
+	char playTimeStr[STRSIZE];
+
+	playTime=20-(timeCount%20);
+
+	if(playTime==9){
+
+		BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+		BSP_LCD_FillRect(STATSX0+210, boardY0+250, 50, 20);
+
+	}
+
+	BSP_LCD_SetTextColor(0xFF606060);
+	BSP_LCD_SetFont(&Font16);
+	sprintf(playTimeStr,"%i", playTime);
+
+	BSP_LCD_DisplayStringAt(STATSX0+210, boardY0+250, (uint8_t*) playTimeStr, LEFT_MODE);
+
+	if(playTime==1){
+
+		HAL_Delay(1000);
+
+		player = !player;
+
+		return player;
+
+	}
+
+	return player;
+
+}
