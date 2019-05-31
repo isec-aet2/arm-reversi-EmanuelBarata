@@ -47,6 +47,9 @@
 #define STATSX0					500
 #define STRSIZE					100
 
+//#define BLACKCOUNT				timeOutCounter[0]
+//#define WHITECOUNT				timeOutCounter[1]
+
 typedef enum bool{FALSE, TRUE} BOOL;
 
 typedef struct Piece{
@@ -64,7 +67,8 @@ int placePiece(int x0, int y0, int player);
 void transColor(int Xpos, int Ypos, int player);
 int countPieces(int player);
 BOOL verifyEncapsulate(int Xpos, int Ypos, int player);
-BOOL verifyVictory(int player, int possibleMoves);
+BOOL verifyPossibleMoves(int player, int possibleMoves);
+BOOL verifyTimeOuts(int player, int * timeOuts);
 BOOL possiblePlace(int Xpos, int Ypos, int player);
 int findPossiblePlaces(int player);
 
@@ -74,7 +78,11 @@ void MENU();
 BOOL selectMenuOption(int x, int y, BOOL menuState);
 
 void printTotalGameTime(int timeCount);
-int printPlayTime(int timeCount, int player);
+int printPlayTime(int timeCount, int player, int* timeOutCount);
+
+BOOL endGame(int player, int possibleMoves, int * timeOuts);
+void printEndMessage();
+
 
 #ifdef __cplusplus
 extern "C" {

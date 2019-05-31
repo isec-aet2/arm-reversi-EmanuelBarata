@@ -8,6 +8,8 @@
 #include "Functions.h"
 #include "stm32f769i_discovery_lcd.h"
 #include "stm32f769i_discovery.h"
+#include "fatfs.h"
+#include <string.h>
 #include <stdio.h>
 
 
@@ -78,7 +80,7 @@ void gameStats(int player, int possibleMoves){
 	sprintf(timePlay, "REMAINING TIME (S):");
 
 	sprintf(p1Score,"SNOW WHITE: %i", pieceCountW);
-	sprintf(p2Score,"BLACK JACK: %i", pieceCountB);
+	sprintf(p2Score,"SIRIUS BLACK: %i", pieceCountB);
 
 	if(player){
 		sprintf(playerName,"PLAYER 1: SNOW WHITE");
@@ -92,8 +94,7 @@ void gameStats(int player, int possibleMoves){
 
 	BSP_LCD_FillRect(STATSX0+110, boardY0+100, xSize-(STATSX0+110), 20);
 	BSP_LCD_FillRect(STATSX0+165, boardY0+150, 50, 20);
-	//BSP_LCD_FillRect(STATSX0+160, boardY0+200, xSize-(STATSX0+160), 20);
-	//BSP_LCD_FillRect(STATSX0+210, boardY0+250, 50, 20);
+
 	BSP_LCD_FillRect(STATSX0+125, boardY0+300, 50, 20);
 	BSP_LCD_FillRect(STATSX0+125, boardY0+350, 50, 20);
 
@@ -256,7 +257,7 @@ BOOL verifyEncapsulate(int Xpos, int Ypos, int player){
 
 				for(int i=1; i<DIMENSION;i++){
 
-					if(Xpos+dx*i*boardPlaceWidth >=  boardX0  && Ypos+dy*i*boardPlaceHeight >= boardY0  && Xpos+dx*i*boardPlaceWidth <= boardX0+DIMENSION*boardPlaceWidth && Ypos+dy*i*boardPlaceHeight <= boardY0+DIMENSION*boardPlaceHeight ){
+					if(Xpos+dx*i*boardPlaceWidth >=  boardX0  && Ypos+dy*i*boardPlaceHeight >= boardY0  && Xpos+dx*i*boardPlaceWidth < boardX0+DIMENSION*boardPlaceWidth && Ypos+dy*i*boardPlaceHeight < boardY0+DIMENSION*boardPlaceHeight ){
 
 
 						if(BSP_LCD_ReadPixel(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight)==LCD_COLOR_LIGHTGRAY){
@@ -378,7 +379,7 @@ int countPieces(int player){
 
 }
 
-BOOL verifyVictory(int player, int possibleMoves){
+BOOL verifyPossibleMoves(int player, int possibleMoves){
 
 	if(possibleMoves==0){
 
@@ -389,7 +390,16 @@ BOOL verifyVictory(int player, int possibleMoves){
 
 }
 
+BOOL verifyTimeOuts(int player, int * timeOuts){
 
+	if(timeOuts[player] == 3){
+
+		return TRUE;
+	}
+
+	return FALSE;
+
+}
 
 void MENU(){
 
@@ -472,7 +482,7 @@ void printTotalGameTime(int timeCount){
 }
 
 
-int printPlayTime(int timeCount, int player){
+int printPlayTime(int timeCount, int player, int* timeOutCount){
 
 	int playTime;
 	char playTimeStr[STRSIZE];
@@ -496,6 +506,8 @@ int printPlayTime(int timeCount, int player){
 
 		HAL_Delay(1000);
 
+		timeOutCount[player]++;
+
 		player = !player;
 
 		return player;
@@ -505,3 +517,136 @@ int printPlayTime(int timeCount, int player){
 	return player;
 
 }
+
+
+BOOL endGame(int player, int possibleMoves, int * timeOuts){
+
+	int xSize = BSP_LCD_GetXSize();
+	int ySize = BSP_LCD_GetYSize();
+
+	int nPieces;
+
+	char victory[STRSIZE];
+	char vicPlayer[STRSIZE];
+	char reason[STRSIZE];
+	char vicPlayerScore[STRSIZE];
+
+	sprintf(victory, "GAME OVER");
+
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+
+	if(verifyPossibleMoves(player, possibleMoves)){
+
+		if(player==PLAYERWHITE){
+			sprintf(vicPlayer, "CONGTRATS SIRIUS BLACK");
+		}
+		else{
+			sprintf(vicPlayer, "CONGRATS WHITE SNOW");
+		}
+
+		nPieces = countPieces(!player);
+		sprintf(vicPlayerScore, "SCORE: %i",nPieces);
+
+		sprintf(reason, "NO POSSIBLE MOVES!");
+
+		BSP_LCD_FillRect(STATSX0, boardY0 , xSize - STATSX0, ySize - boardY0 - 10);
+
+		BSP_LCD_SetTextColor(0xFF606060);
+
+		BSP_LCD_SetFont(&Font20);
+		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+
+		BSP_LCD_DisplayStringAt(STATSX0	, boardY0, (uint8_t*) victory , LEFT_MODE);
+		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+50, (uint8_t*) vicPlayer, LEFT_MODE);
+
+		BSP_LCD_SetFont(&Font16);
+
+		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+150, (uint8_t*) reason, LEFT_MODE);
+		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+200, (uint8_t*) vicPlayerScore, LEFT_MODE);
+
+		return TRUE;
+
+	}
+
+	if(verifyTimeOuts(!player, timeOuts)){
+
+		if(player==PLAYERWHITE){
+			sprintf(vicPlayer, "CONGTRATS WHITE SNOW");
+		}
+		else{
+			sprintf(vicPlayer, "CONGRATS SIRIUS BLACK");
+		}
+
+		nPieces = countPieces(player);
+		sprintf(vicPlayerScore, "SCORE: %i",nPieces);
+
+		BSP_LCD_FillRect(STATSX0, boardY0 , xSize - STATSX0, ySize - boardY0 - 10);
+		sprintf(reason, "TIME OUTS!");
+
+		BSP_LCD_SetTextColor(0xFF606060);
+
+		BSP_LCD_SetFont(&Font20);
+		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+		BSP_LCD_DisplayStringAt(STATSX0	, boardY0, (uint8_t*) victory , LEFT_MODE);
+
+		BSP_LCD_SetFont(&Font16);
+		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+100, (uint8_t*) vicPlayer, LEFT_MODE);
+		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+150, (uint8_t*) reason, LEFT_MODE);
+		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+200, (uint8_t*) vicPlayerScore, LEFT_MODE);
+
+		return TRUE;
+
+	}
+
+
+	return FALSE;
+
+
+}
+
+void printEndMessage(){
+
+	char pbMessage[STRSIZE];
+	char pbMessage2[STRSIZE];
+
+	sprintf(pbMessage, "PRESS PUSH BOTTOM");
+	sprintf(pbMessage2, "TO RETURN TO MENU");
+
+	BSP_LCD_SetTextColor(0xFF606060);
+	BSP_LCD_SetFont(&Font16);
+	BSP_LCD_DisplayStringAt(STATSX0, boardY0+250, (uint8_t*) pbMessage, LEFT_MODE);
+	BSP_LCD_DisplayStringAt(STATSX0, boardY0+270, (uint8_t*) pbMessage2, LEFT_MODE);
+
+}
+
+/*
+void writeGameInfoSD (char * player, char * reason, char * score){
+
+	UINT nBytes;
+	char string1[];
+	char string2[];
+	char string3[];
+
+    if(f_mount (&SDFatFS, SDPath, 0)!=FR_OK){
+        Error_Handler();
+    }
+
+    HAL_Delay(100);
+
+    if(f_open (&SDFile, "Results.txt", FA_OPEN_APPEND | FA_WRITE)!=FR_OK){
+        Error_Handler();
+    }
+
+    int x=strlen(string)*sizeof(char);
+
+    HAL_Delay(100);
+    if(f_write (&SDFile, string, strlen(x), &nBytes)!=FR_OK)
+        Error_Handler();
+    f_close (&SDFile);
+}
+
+*/
+
+
+
+

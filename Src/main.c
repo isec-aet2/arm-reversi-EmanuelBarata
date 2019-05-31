@@ -20,6 +20,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -65,6 +66,8 @@ DSI_HandleTypeDef hdsi;
 
 LTDC_HandleTypeDef hltdc;
 
+SD_HandleTypeDef hsd2;
+
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 
@@ -89,6 +92,9 @@ tPiece posArray[DIMENSION*DIMENSION];
 uint32_t ConvertedValue;
 
 int possiblePlaces;
+int timeOutCounter[2];
+
+BOOL gameOverFlag;
 
 /* USER CODE END PV */
 
@@ -101,6 +107,7 @@ static void MX_LTDC_Init(void);
 static void MX_DSIHOST_DSI_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_SDMMC2_SD_Init(void);
 static void MX_TIM7_Init(void);
 /* USER CODE BEGIN PFP */
 
@@ -208,7 +215,9 @@ int main(void)
   MX_DSIHOST_DSI_Init();
   MX_TIM6_Init();
   MX_ADC1_Init();
+  MX_SDMMC2_SD_Init();
   MX_TIM7_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
   BSP_LCD_Init();
@@ -220,7 +229,6 @@ int main(void)
   BSP_TS_Init(xSize,ySize);
   BSP_TS_ITConfig();
 
-
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_TIM_Base_Start_IT(&htim7);
   HAL_ADC_Start_IT(&hadc1);
@@ -230,6 +238,9 @@ int main(void)
 
   timer7Counter=0;
   timerDif=0;
+  timeOutCounter[0]=0;
+  timeOutCounter[1]=0;
+  gameOverFlag=FALSE;
 
 
   /* USER CODE END 2 */
@@ -242,8 +253,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-	  possiblePlaces=findPossiblePlaces(playerTurn);
 
 	  if(timerFlag){
 
@@ -258,7 +267,24 @@ int main(void)
 		BSP_LCD_DisplayStringAt(0, ySize-10, (uint8_t *)tempString,RIGHT_MODE);
 		}
 
-	  if(displayMenu){
+	  if(gameOverFlag){
+
+		  printEndMessage();
+		  timeOutCounter[0]=0;
+		  timeOutCounter[1]=0;
+
+		  if(pbFlag){
+			  pbFlag=FALSE;
+			  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+			  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
+			  displayMenu=TRUE;
+			  gameOverFlag=FALSE;
+
+		  }
+
+	  }
+
+	  else if(displayMenu){
 
 		  MENU();
 
@@ -279,33 +305,54 @@ int main(void)
 
 	  else{
 
+		  possiblePlaces=findPossiblePlaces(playerTurn);
+
 		  printTotalGameTime(timer7Counter);
 		  playerTurnCopy=playerTurn;
-		  playerTurn = printPlayTime(timerDif, playerTurn);
+		  playerTurn = printPlayTime(timerDif, playerTurn, timeOutCounter);
 
-		  if(playerTurn != playerTurnCopy){
-			  possiblePlaces=findPossiblePlaces(playerTurn);
-			  gameStats(playerTurn,possiblePlaces);
-			  refreshBoard();
-		  }
+		  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
 
-		  if(tsFlag){
-
-			  tsFlag=0;
-			  timerDif=0;
-
-			  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
-			  possiblePlaces=findPossiblePlaces(playerTurn);
-			  gameStats(playerTurn,possiblePlaces);
+			  gameOverFlag=TRUE;
 			  refreshBoard();
 
 		  }
 
-		  if(pbFlag){
-			  pbFlag=FALSE;
-			  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-			  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
-			  displayMenu=TRUE;
+		  else{
+
+			  if(playerTurn != playerTurnCopy){
+				  possiblePlaces=findPossiblePlaces(playerTurn);
+				  gameStats(playerTurn,possiblePlaces);
+				  refreshBoard();
+			  }
+
+			  if(tsFlag){
+
+				  tsFlag=0;
+				  timerDif=0;
+
+				  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
+				  possiblePlaces=findPossiblePlaces(playerTurn);
+				  gameStats(playerTurn,possiblePlaces);
+				  refreshBoard();
+
+				  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
+
+					  gameOverFlag=TRUE;
+
+				  }
+
+			  }
+
+			  if(pbFlag){
+				  pbFlag=FALSE;
+				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+				  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
+				  displayMenu=TRUE;
+				  gameOverFlag=FALSE;
+
+			  }
+
 		  }
 	  }
 
@@ -336,7 +383,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLM = 25;
   RCC_OscInitStruct.PLL.PLLN = 400;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 8;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -360,13 +407,16 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC|RCC_PERIPHCLK_SDMMC2
+                              |RCC_PERIPHCLK_CLK48;
   PeriphClkInitStruct.PLLSAI.PLLSAIN = 192;
   PeriphClkInitStruct.PLLSAI.PLLSAIR = 2;
   PeriphClkInitStruct.PLLSAI.PLLSAIQ = 2;
   PeriphClkInitStruct.PLLSAI.PLLSAIP = RCC_PLLSAIP_DIV2;
   PeriphClkInitStruct.PLLSAIDivQ = 1;
   PeriphClkInitStruct.PLLSAIDivR = RCC_PLLSAIDIVR_2;
+  PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48SOURCE_PLL;
+  PeriphClkInitStruct.Sdmmc2ClockSelection = RCC_SDMMC2CLKSOURCE_CLK48;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -654,6 +704,34 @@ static void MX_LTDC_Init(void)
 }
 
 /**
+  * @brief SDMMC2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SDMMC2_SD_Init(void)
+{
+
+  /* USER CODE BEGIN SDMMC2_Init 0 */
+
+  /* USER CODE END SDMMC2_Init 0 */
+
+  /* USER CODE BEGIN SDMMC2_Init 1 */
+
+  /* USER CODE END SDMMC2_Init 1 */
+  hsd2.Instance = SDMMC2;
+  hsd2.Init.ClockEdge = SDMMC_CLOCK_EDGE_RISING;
+  hsd2.Init.ClockBypass = SDMMC_CLOCK_BYPASS_DISABLE;
+  hsd2.Init.ClockPowerSave = SDMMC_CLOCK_POWER_SAVE_DISABLE;
+  hsd2.Init.BusWide = SDMMC_BUS_WIDE_1B;
+  hsd2.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
+  hsd2.Init.ClockDiv = 0;
+  /* USER CODE BEGIN SDMMC2_Init 2 */
+
+  /* USER CODE END SDMMC2_Init 2 */
+
+}
+
+/**
   * @brief TIM6 Initialization Function
   * @param None
   * @retval None
@@ -787,8 +865,8 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOI_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
@@ -799,6 +877,12 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : PI13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PI15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOI, &GPIO_InitStruct);
 
