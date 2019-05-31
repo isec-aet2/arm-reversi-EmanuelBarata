@@ -186,6 +186,8 @@ int main(void)
 	int playerTurnCopy;
 	//char tsString[20];
 
+	BOOL playFlag;
+
   /* USER CODE END 1 */
   
 
@@ -310,7 +312,7 @@ int main(void)
 
 	  }
 
-	  else{
+	  else if (!robotFlag){
 
 		  possiblePlaces=findPossiblePlaces(playerTurn);
 
@@ -361,6 +363,89 @@ int main(void)
 			  }
 
 		  }
+	  }
+
+	  else{
+
+		  possiblePlaces=findPossiblePlaces(playerTurn);
+
+		  printTotalGameTime(timer7Counter);
+		  playerTurnCopy=playerTurn;
+		  playerTurn = printPlayTime(timerDif, playerTurn, timeOutCounter);
+
+		  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
+
+			  gameOverFlag=TRUE;
+			  refreshBoard();
+		  }
+
+		  if(playerTurn != playerTurnCopy){
+			  possiblePlaces=findPossiblePlaces(playerTurn);
+			  gameStats(playerTurn,possiblePlaces);
+			  refreshBoard();
+		  }
+
+		  if(playerTurn==PLAYERWHITE){
+
+			  if(tsFlag){
+
+				  tsFlag=0;
+
+				  timerDif=0;
+
+				  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
+
+				  possiblePlaces=findPossiblePlaces(playerTurn);
+
+				  gameStats(playerTurn,possiblePlaces);
+
+				  refreshBoard();
+
+
+			  }
+
+			  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
+				  gameOverFlag=TRUE;
+			  }
+
+			  if(pbFlag){
+
+				  pbFlag=FALSE;
+				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+				  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
+				  displayMenu=TRUE;
+				  gameOverFlag=FALSE;
+
+			  }
+
+		  }
+
+		  if(playerTurn==PLAYERBLACK){
+
+
+			  timerDif=0;
+			  playerTurn=robotChoice(possiblePlaces);
+			  possiblePlaces=findPossiblePlaces(playerTurn);
+			  gameStats(playerTurn,possiblePlaces);
+			  refreshBoard();
+
+
+			  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
+
+				  gameOverFlag=TRUE;
+
+			  }
+
+			  if(pbFlag){
+				  pbFlag=FALSE;
+				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+				  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
+				  displayMenu=TRUE;
+				  gameOverFlag=FALSE;
+
+			  }
+		  }
+
 	  }
 
   }

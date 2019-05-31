@@ -105,7 +105,7 @@ BOOL endGame(int player, int possibleMoves, int * timeOuts){
 		sprintf(vicPlayerScore, "SCORE: %i",nPieces);
 
 		BSP_LCD_FillRect(STATSX0, boardY0 , xSize - STATSX0, ySize - boardY0 - 10);
-		sprintf(reason, "TIME OUTS!");
+		sprintf(reason, "OUT OF TIME (3)!");
 
 		BSP_LCD_SetTextColor(0xFF606060);
 
@@ -328,6 +328,7 @@ BOOL possiblePlace(int Xpos, int Ypos, int player){
 
 								BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGREEN);
 								BSP_LCD_DrawRect(Xpos, Ypos, boardPlaceWidth, boardPlaceHeight);
+
 								return TRUE;
 							}
 						}
@@ -473,22 +474,27 @@ int robotChoice(int possibleMoves){
 	for(int i = posX0; i < posXF; i+=boardPlaceWidth){
 		for(int j = posY0; j < posYF; j+=boardPlaceHeight){
 
-			if(BSP_LCD_ReadPixel(posX0-boardPlaceWidth/2,posY0)==LCD_COLOR_LIGHTGREEN){
-				if(BSP_LCD_ReadPixel(posX0+boardPlaceWidth/2,posY0)==LCD_COLOR_LIGHTGREEN){
-					if(BSP_LCD_ReadPixel(posX0,posY0+boardPlaceHeight/2)==LCD_COLOR_LIGHTGREEN){
-						if(BSP_LCD_ReadPixel(posX0,posY0-boardPlaceHeight/2)==LCD_COLOR_LIGHTGREEN){
 
-							if(BSP_LCD_ReadPixel(posX0,posY0)==LCD_COLOR_LIGHTGRAY){
+			if(BSP_LCD_ReadPixel(i-boardPlaceWidth/2,j)==LCD_COLOR_LIGHTGREEN){
+				if(BSP_LCD_ReadPixel(i+boardPlaceWidth/2,j)==LCD_COLOR_LIGHTGREEN){
+					if(BSP_LCD_ReadPixel(i,j+boardPlaceHeight/2)==LCD_COLOR_LIGHTGREEN){
+						if(BSP_LCD_ReadPixel(i,j-boardPlaceHeight/2)==LCD_COLOR_LIGHTGREEN){
 
-								transColor(posX0-boardPlaceWidth/2, posY0-boardPlaceHeight/2, PLAYERBLACK);
+							if(BSP_LCD_ReadPixel(i,j)==LCD_COLOR_LIGHTGRAY){
 
 								if(possCounter==randPos){
 
 									BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-									player=PLAYERWHITE;
 
-									BSP_LCD_DrawCircle(posX0, posY0, 20);
-									BSP_LCD_FillCircle(posX0, posY0, 20);
+
+									BSP_LCD_DrawCircle(i, j, 20);
+									BSP_LCD_FillCircle(i, j, 20);
+									BSP_LCD_FillCircle(randPos*50, 50, 20);
+
+									transColor(i-boardPlaceWidth/2, j-boardPlaceHeight/2, PLAYERBLACK);
+									HAL_Delay(1500);
+									return PLAYERWHITE;
+
 								}
 							}
 						}
@@ -497,7 +503,8 @@ int robotChoice(int possibleMoves){
 			}
 		}
 	}
-	return player;
+
+	return PLAYERBLACK;
 }
 
 BOOL selectMenuOption(int x, int y, BOOL* robotFlag){
@@ -538,7 +545,6 @@ BOOL selectMenuOption(int x, int y, BOOL* robotFlag){
 			BSP_LCD_FillRect(pX0, pY0, OPTION1WIDTH+1, OPTION1HEIGHT+1);
 			BSP_LCD_FillRect(pX0, p2Y0, OPTION1WIDTH+1, OPTION1HEIGHT+1);
 
-			*robotFlag=TRUE;
 			return FALSE;
 	}
 
@@ -562,6 +568,7 @@ BOOL selectMenuOption(int x, int y, BOOL* robotFlag){
 		BSP_LCD_FillRect(p2X0, p2Y0, OPTION1WIDTH+1, OPTION1HEIGHT+1);
 
 
+		*robotFlag=TRUE;
 		return FALSE;
 
 	}
@@ -720,12 +727,16 @@ void writeGameInfoSD (char * player, char * reason, char * score){
 
     if(f_mount (&SDFatFS, SDPath, 0)!=FR_OK){
         Error_Handler();
+        BSP_LCD_SetTextColor(LCD_COLOR_BROWN);
+        BSP_LCD_FillCircle(boardX0, boardY0, 10);
     }
 
     HAL_Delay(100);
 
-    if(f_open (&SDFile, "Results.txt", FA_WRITE | FA_CREATE_ALWAYS )!=FR_OK){
+    if(f_open (&SDFile, "Res.txt", FA_WRITE | FA_CREATE_ALWAYS )!=FR_OK){
         Error_Handler();
+        BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+        BSP_LCD_FillCircle(boardX0+boardPlaceWidth, boardY0, 10);
     }
 
     HAL_Delay(100);
@@ -733,6 +744,8 @@ void writeGameInfoSD (char * player, char * reason, char * score){
     if(f_write (&SDFile, string1, strlen(string1), &nBytes)!=FR_OK){
 
         Error_Handler();
+        BSP_LCD_SetTextColor(LCD_COLOR_RED);
+        BSP_LCD_FillCircle(boardX0+2*boardPlaceWidth, boardY0, 10);
 
     }
 
