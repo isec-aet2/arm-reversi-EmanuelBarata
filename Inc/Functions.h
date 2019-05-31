@@ -83,6 +83,8 @@ int printPlayTime(int timeCount, int player, int* timeOutCount);
 BOOL endGame(int player, int possibleMoves, int * timeOuts);
 void printEndMessage();
 
+void writeGameInfoSD (char * player, char * reason, char * score);
+
 
 #ifdef __cplusplus
 extern "C" {

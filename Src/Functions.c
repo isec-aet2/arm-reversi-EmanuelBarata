@@ -564,6 +564,8 @@ BOOL endGame(int player, int possibleMoves, int * timeOuts){
 		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+150, (uint8_t*) reason, LEFT_MODE);
 		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+200, (uint8_t*) vicPlayerScore, LEFT_MODE);
 
+		writeGameInfoSD (vicPlayer, reason, vicPlayerScore);
+
 		return TRUE;
 
 	}
@@ -594,6 +596,8 @@ BOOL endGame(int player, int possibleMoves, int * timeOuts){
 		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+150, (uint8_t*) reason, LEFT_MODE);
 		BSP_LCD_DisplayStringAt(STATSX0	, boardY0+200, (uint8_t*) vicPlayerScore, LEFT_MODE);
 
+		writeGameInfoSD (vicPlayer, reason, vicPlayerScore);
+
 		return TRUE;
 
 	}
@@ -619,13 +623,19 @@ void printEndMessage(){
 
 }
 
-/*
+
 void writeGameInfoSD (char * player, char * reason, char * score){
 
 	UINT nBytes;
-	char string1[];
-	char string2[];
-	char string3[];
+	char string1[STRSIZE*3];
+
+	sprintf(string1, player);
+	sprintf(string1, "\n");
+	sprintf(string1,reason);
+	sprintf(string1,"\n");
+	sprintf(string1, score);
+	sprintf(string1,"\n");
+
 
     if(f_mount (&SDFatFS, SDPath, 0)!=FR_OK){
         Error_Handler();
@@ -633,19 +643,23 @@ void writeGameInfoSD (char * player, char * reason, char * score){
 
     HAL_Delay(100);
 
-    if(f_open (&SDFile, "Results.txt", FA_OPEN_APPEND | FA_WRITE)!=FR_OK){
+    if(f_open (&SDFile, "Results.txt", FA_WRITE | FA_CREATE_ALWAYS )!=FR_OK){
         Error_Handler();
     }
 
-    int x=strlen(string)*sizeof(char);
-
     HAL_Delay(100);
-    if(f_write (&SDFile, string, strlen(x), &nBytes)!=FR_OK)
+
+    if(f_write (&SDFile, string1, strlen(string1), &nBytes)!=FR_OK){
+
         Error_Handler();
+
+    }
+
     f_close (&SDFile);
+
 }
 
-*/
+
 
 
 
