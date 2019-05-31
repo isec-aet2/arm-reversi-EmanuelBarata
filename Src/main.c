@@ -26,6 +26,9 @@
 /* USER CODE BEGIN Includes */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
 #include "stm32f769i_discovery_lcd.h"
 #include "stm32f769i_discovery.h"
 #include "stm32f769i_discovery_ts.h"
@@ -95,6 +98,7 @@ int possiblePlaces;
 int timeOutCounter[2];
 
 BOOL gameOverFlag;
+BOOL robotFlag;
 
 /* USER CODE END PV */
 
@@ -241,6 +245,9 @@ int main(void)
   timeOutCounter[0]=0;
   timeOutCounter[1]=0;
   gameOverFlag=FALSE;
+  robotFlag=FALSE;
+
+  srand(time(NULL));
 
 
   /* USER CODE END 2 */
@@ -290,7 +297,7 @@ int main(void)
 
 		  if(tsFlag){
 
-			  displayMenu=selectMenuOption((int)TS_State.touchX[0], (int)TS_State.touchY[0],displayMenu);
+			  displayMenu=selectMenuOption((int)TS_State.touchX[0], (int)TS_State.touchY[0],&robotFlag);
 
 		  }
 

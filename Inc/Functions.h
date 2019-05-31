@@ -47,8 +47,6 @@
 #define STATSX0					500
 #define STRSIZE					100
 
-//#define BLACKCOUNT				timeOutCounter[0]
-//#define WHITECOUNT				timeOutCounter[1]
 
 typedef enum bool{FALSE, TRUE} BOOL;
 
@@ -75,7 +73,7 @@ int findPossiblePlaces(int player);
 void refreshBoard();
 
 void MENU();
-BOOL selectMenuOption(int x, int y, BOOL menuState);
+BOOL selectMenuOption(int x, int y, BOOL* robotFlag);
 
 void printTotalGameTime(int timeCount);
 int printPlayTime(int timeCount, int player, int* timeOutCount);
@@ -84,6 +82,8 @@ BOOL endGame(int player, int possibleMoves, int * timeOuts);
 void printEndMessage();
 
 void writeGameInfoSD (char * player, char * reason, char * score);
+
+int robotChoice(int possibleMoves);
 
 
 #ifdef __cplusplus
