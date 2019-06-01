@@ -462,7 +462,6 @@ void refreshBoard(){
 
 int robotChoice(int possibleMoves){
 
-	int player;
 	int randPos = rand()%possibleMoves;
 	int possCounter=0;
 
@@ -486,16 +485,18 @@ int robotChoice(int possibleMoves){
 
 									BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
 
+									HAL_Delay(500);
 
 									BSP_LCD_DrawCircle(i, j, 20);
 									BSP_LCD_FillCircle(i, j, 20);
-									BSP_LCD_FillCircle(randPos*50, 50, 20);
 
 									transColor(i-boardPlaceWidth/2, j-boardPlaceHeight/2, PLAYERBLACK);
-									HAL_Delay(1500);
+
 									return PLAYERWHITE;
 
 								}
+								else
+									possCounter++;
 							}
 						}
 					}
@@ -593,7 +594,7 @@ void transColor(int Xpos, int Ypos, int player){
 
 				for(int i=1; i<DIMENSION;i++){
 
-					if(Xpos+dx*i*boardPlaceWidth >=  boardX0  && Ypos+dy*i*boardPlaceHeight >= boardY0  && Xpos+dx*i*boardPlaceWidth <= boardX0+DIMENSION*boardPlaceWidth && Ypos+dy*i*boardPlaceHeight <= boardY0+DIMENSION*boardPlaceHeight ){
+					if(Xpos+dx*i*boardPlaceWidth >=  boardX0  && Ypos+dy*i*boardPlaceHeight >= boardY0  && Xpos+dx*i*boardPlaceWidth < boardX0+DIMENSION*boardPlaceWidth && Ypos+dy*i*boardPlaceHeight < boardY0+DIMENSION*boardPlaceHeight ){
 
 
 						if(BSP_LCD_ReadPixel(Xpos+(0.5+dx*i)*boardPlaceWidth, Ypos+(0.5+dy*i)*boardPlaceHeight)==LCD_COLOR_LIGHTGRAY){
@@ -711,6 +712,11 @@ BOOL verifyTimeOuts(int player, int * timeOuts){
 
 }
 
+BOOL verifyFullBoard(){
+
+
+
+}
 
 void writeGameInfoSD (char * player, char * reason, char * score){
 
@@ -728,7 +734,7 @@ void writeGameInfoSD (char * player, char * reason, char * score){
     if(f_mount (&SDFatFS, SDPath, 0)!=FR_OK){
         Error_Handler();
         BSP_LCD_SetTextColor(LCD_COLOR_BROWN);
-        BSP_LCD_FillCircle(boardX0, boardY0, 10);
+        BSP_LCD_FillCircle(650, 380, 10);
     }
 
     HAL_Delay(100);
@@ -736,7 +742,7 @@ void writeGameInfoSD (char * player, char * reason, char * score){
     if(f_open (&SDFile, "Res.txt", FA_WRITE | FA_CREATE_ALWAYS )!=FR_OK){
         Error_Handler();
         BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
-        BSP_LCD_FillCircle(boardX0+boardPlaceWidth, boardY0, 10);
+        BSP_LCD_FillCircle(660, 380, 10);
     }
 
     HAL_Delay(100);
@@ -745,7 +751,7 @@ void writeGameInfoSD (char * player, char * reason, char * score){
 
         Error_Handler();
         BSP_LCD_SetTextColor(LCD_COLOR_RED);
-        BSP_LCD_FillCircle(boardX0+2*boardPlaceWidth, boardY0, 10);
+        BSP_LCD_FillCircle(660, 380, 10);
 
     }
 

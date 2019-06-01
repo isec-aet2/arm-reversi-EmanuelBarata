@@ -186,8 +186,6 @@ int main(void)
 	int playerTurnCopy;
 	//char tsString[20];
 
-	BOOL playFlag;
-
   /* USER CODE END 1 */
   
 
@@ -395,7 +393,7 @@ int main(void)
 
 				  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
 
-				  possiblePlaces=findPossiblePlaces(playerTurn);
+				  //possiblePlaces=findPossiblePlaces(playerTurn);
 
 				  gameStats(playerTurn,possiblePlaces);
 
@@ -415,6 +413,7 @@ int main(void)
 				  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
 				  displayMenu=TRUE;
 				  gameOverFlag=FALSE;
+				  robotFlag=FALSE;
 
 			  }
 
@@ -425,7 +424,7 @@ int main(void)
 
 			  timerDif=0;
 			  playerTurn=robotChoice(possiblePlaces);
-			  possiblePlaces=findPossiblePlaces(playerTurn);
+			  //possiblePlaces=findPossiblePlaces(playerTurn);
 			  gameStats(playerTurn,possiblePlaces);
 			  refreshBoard();
 
@@ -442,6 +441,7 @@ int main(void)
 				  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
 				  displayMenu=TRUE;
 				  gameOverFlag=FALSE;
+				  robotFlag=FALSE;
 
 			  }
 		  }
