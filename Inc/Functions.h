@@ -26,6 +26,14 @@
 #include "stm32f769i_discovery.h"
 
 
+
+#define TEMP_REFRESH_PERIOD   251    /* Internal temperature refresh period */
+#define MAX_CONVERTED_VALUE   4095    /* Max converted value */
+#define AMBIENT_TEMP            25    /* Ambient Temperature */
+#define VSENS_AT_AMBIENT_TEMP  760    /* VSENSE value (mv) at ambient temperature */
+#define AVG_SLOPE               25    /* Avg_Solpe multiply by 10 */
+#define VREF                  3300
+
 #define boardX0					50
 #define boardY0 				50
 #define DIMENSION 				8
@@ -67,6 +75,7 @@ int countPieces(int player);
 BOOL verifyEncapsulate(int Xpos, int Ypos, int player);
 BOOL verifyPossibleMoves(int player, int possibleMoves);
 BOOL verifyTimeOuts(int player, int * timeOuts);
+BOOL verifyFullBoard();
 BOOL possiblePlace(int Xpos, int Ypos, int player);
 int findPossiblePlaces(int player);
 
@@ -85,6 +94,7 @@ void writeGameInfoSD (char * player, char * reason, char * score);
 
 int robotChoice(int possibleMoves);
 
+BOOL printTemperature(int convertedValue);
 
 #ifdef __cplusplus
 extern "C" {

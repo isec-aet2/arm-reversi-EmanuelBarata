@@ -47,11 +47,16 @@ BOOL endGame(int player, int possibleMoves, int * timeOuts){
 	int ySize = BSP_LCD_GetYSize();
 
 	int nPieces;
+	int wPieces;
+	int bPieces;
 
 	char victory[STRSIZE];
 	char vicPlayer[STRSIZE];
 	char reason[STRSIZE];
 	char vicPlayerScore[STRSIZE];
+
+	wPieces = countPieces(PLAYERWHITE);
+	bPieces = countPieces(PLAYERBLACK);
 
 	sprintf(victory, "GAME OVER");
 
@@ -59,17 +64,23 @@ BOOL endGame(int player, int possibleMoves, int * timeOuts){
 
 	if(verifyPossibleMoves(player, possibleMoves)){
 
-		if(player==PLAYERWHITE){
-			sprintf(vicPlayer, "CONGTRATS SIRIUS BLACK");
+		if(bPieces > wPieces){
+			sprintf(vicPlayer, "WINNER SIRIUS BLACK");
+			sprintf(vicPlayerScore, "SCORE: %i",bPieces);
+
 		}
 		else{
-			sprintf(vicPlayer, "CONGRATS WHITE SNOW");
+			sprintf(vicPlayer, "WINNER WHITE SNOW");
+			sprintf(vicPlayerScore, "SCORE: %i",wPieces);
 		}
 
-		nPieces = countPieces(!player);
-		sprintf(vicPlayerScore, "SCORE: %i",nPieces);
+		if(verifyFullBoard()==FALSE){
+			sprintf(reason, "NO POSSIBLE MOVES!");
+		}
 
-		sprintf(reason, "NO POSSIBLE MOVES!");
+		else{
+			sprintf(reason, "FULL BOARD PONTUATION");
+		}
 
 		BSP_LCD_FillRect(STATSX0, boardY0 , xSize - STATSX0, ySize - boardY0 - 10);
 
@@ -433,6 +444,29 @@ int printPlayTime(int timeCount, int player, int* timeOutCount){
 
 }
 
+
+
+/*BOOL printTemperature(int convertedValue){
+
+	uint32_t JTemp;
+	char tempString[STRSIZE];
+	int ySize;
+
+	ySize=BSP_LCD_GetYSize();
+
+	JTemp = ((((convertedValue * VREF)/MAX_CONVERTED_VALUE) - VSENS_AT_AMBIENT_TEMP) * 10 / AVG_SLOPE) + AMBIENT_TEMP;
+
+	sprintf(tempString, "Temp: %ld deg. Celsius ", JTemp);
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetFont(&Font12);
+	BSP_LCD_SetTextColor(LCD_COLOR_DARKMAGENTA);
+
+	BSP_LCD_DisplayStringAt(0, ySize-10, (uint8_t *)tempString,RIGHT_MODE);
+
+	return FALSE;
+
+}*/
+
 void printTotalGameTime(int timeCount){
 
 	char totTime[STRSIZE];
@@ -714,6 +748,24 @@ BOOL verifyTimeOuts(int player, int * timeOuts){
 
 BOOL verifyFullBoard(){
 
+	int x0 = boardX0+boardPlaceWidth/2;
+	int y0 = boardY0+boardPlaceHeight/2;
+	int xF = boardX0 + DIMENSION*boardPlaceWidth/2;
+	int yF = boardY0 + DIMENSION*boardPlaceHeight/2;
+
+	for(int i = x0; i < xF; i += boardPlaceWidth){
+		for(int j = y0; j < yF; j += boardPlaceHeight ){
+
+			if(BSP_LCD_ReadPixel(i, j) == LCD_COLOR_LIGHTGRAY){
+
+				return FALSE;
+
+			}
+
+		}
+
+	}
+	return TRUE;
 
 
 }
@@ -724,17 +776,17 @@ void writeGameInfoSD (char * player, char * reason, char * score){
 	char string1[STRSIZE*3];
 
 	sprintf(string1, player);
-	sprintf(string1, "\n");
-	sprintf(string1,reason);
-	sprintf(string1,"\n");
-	sprintf(string1, score);
-	sprintf(string1,"\n");
+	//sprintf(string1, "\n");
+	//sprintf(string1,reason);
+	//sprintf(string1,"\n");
+	//sprintf(string1, score);
+	//sprintf(string1,"\n");
 
 
     if(f_mount (&SDFatFS, SDPath, 0)!=FR_OK){
         Error_Handler();
         BSP_LCD_SetTextColor(LCD_COLOR_BROWN);
-        BSP_LCD_FillCircle(650, 380, 10);
+        BSP_LCD_FillCircle(650, 400, 10);
     }
 
     HAL_Delay(100);
@@ -742,7 +794,7 @@ void writeGameInfoSD (char * player, char * reason, char * score){
     if(f_open (&SDFile, "Res.txt", FA_WRITE | FA_CREATE_ALWAYS )!=FR_OK){
         Error_Handler();
         BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
-        BSP_LCD_FillCircle(660, 380, 10);
+        BSP_LCD_FillCircle(660, 400, 10);
     }
 
     HAL_Delay(100);
@@ -751,7 +803,7 @@ void writeGameInfoSD (char * player, char * reason, char * score){
 
         Error_Handler();
         BSP_LCD_SetTextColor(LCD_COLOR_RED);
-        BSP_LCD_FillCircle(660, 380, 10);
+        BSP_LCD_FillCircle(670, 400, 10);
 
     }
 

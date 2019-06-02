@@ -78,7 +78,7 @@ SDRAM_HandleTypeDef hsdram1;
 
 /* USER CODE BEGIN PV */
 
-int timerFlag=0;
+BOOL timerFlag;
 int timer7Counter;
 int timerDif;
 
@@ -131,7 +131,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if(htim -> Instance == TIM6){
 
-    	timerFlag=1;
+    	timerFlag=TRUE;
 
     }
 
@@ -240,6 +240,7 @@ int main(void)
   displayMenu=TRUE;
   pbFlag=FALSE;
 
+  timerFlag=FALSE;
   timer7Counter=0;
   timerDif=0;
   timeOutCounter[0]=0;
@@ -263,7 +264,7 @@ int main(void)
 
 	  if(timerFlag){
 
-		timerFlag=0;
+		timerFlag=FALSE;
 
 		JTemp = ((((ConvertedValue * VREF)/MAX_CONVERTED_VALUE) - VSENS_AT_AMBIENT_TEMP) * 10 / AVG_SLOPE) + AMBIENT_TEMP;
 		/* Display the Temperature Value on the LCD */
@@ -344,14 +345,13 @@ int main(void)
 				  refreshBoard();
 
 				  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
-
 					  gameOverFlag=TRUE;
-
 				  }
 
 			  }
 
 			  if(pbFlag){
+
 				  pbFlag=FALSE;
 				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 				  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
@@ -366,13 +366,11 @@ int main(void)
 	  else{
 
 		  possiblePlaces=findPossiblePlaces(playerTurn);
-
 		  printTotalGameTime(timer7Counter);
 		  playerTurnCopy=playerTurn;
 		  playerTurn = printPlayTime(timerDif, playerTurn, timeOutCounter);
 
 		  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
-
 			  gameOverFlag=TRUE;
 			  refreshBoard();
 		  }
@@ -386,20 +384,11 @@ int main(void)
 		  if(playerTurn==PLAYERWHITE){
 
 			  if(tsFlag){
-
 				  tsFlag=0;
-
 				  timerDif=0;
-
 				  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
-
-				  //possiblePlaces=findPossiblePlaces(playerTurn);
-
 				  gameStats(playerTurn,possiblePlaces);
-
 				  refreshBoard();
-
-
 			  }
 
 			  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
@@ -421,18 +410,13 @@ int main(void)
 
 		  if(playerTurn==PLAYERBLACK){
 
-
 			  timerDif=0;
 			  playerTurn=robotChoice(possiblePlaces);
-			  //possiblePlaces=findPossiblePlaces(playerTurn);
 			  gameStats(playerTurn,possiblePlaces);
 			  refreshBoard();
 
-
 			  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
-
 				  gameOverFlag=TRUE;
-
 			  }
 
 			  if(pbFlag){
@@ -442,7 +426,6 @@ int main(void)
 				  displayMenu=TRUE;
 				  gameOverFlag=FALSE;
 				  robotFlag=FALSE;
-
 			  }
 		  }
 
