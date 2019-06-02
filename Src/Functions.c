@@ -445,28 +445,6 @@ int printPlayTime(int timeCount, int player, int* timeOutCount){
 }
 
 
-
-/*BOOL printTemperature(int convertedValue){
-
-	uint32_t JTemp;
-	char tempString[STRSIZE];
-	int ySize;
-
-	ySize=BSP_LCD_GetYSize();
-
-	JTemp = ((((convertedValue * VREF)/MAX_CONVERTED_VALUE) - VSENS_AT_AMBIENT_TEMP) * 10 / AVG_SLOPE) + AMBIENT_TEMP;
-
-	sprintf(tempString, "Temp: %ld deg. Celsius ", JTemp);
-	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-	BSP_LCD_SetFont(&Font12);
-	BSP_LCD_SetTextColor(LCD_COLOR_DARKMAGENTA);
-
-	BSP_LCD_DisplayStringAt(0, ySize-10, (uint8_t *)tempString,RIGHT_MODE);
-
-	return FALSE;
-
-}*/
-
 void printTotalGameTime(int timeCount){
 
 	char totTime[STRSIZE];
@@ -667,8 +645,6 @@ void transColor(int Xpos, int Ypos, int player){
 			}
 		}
 	}
-
-	//return FALSE;
 
 }
 

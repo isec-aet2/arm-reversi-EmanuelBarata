@@ -92,13 +92,16 @@ int playerTurn=PLAYERWHITE;
 
 tPiece posArray[DIMENSION*DIMENSION];
 
-uint32_t ConvertedValue;
+uint32_t convertedValue;
 
 int possiblePlaces;
 int timeOutCounter[2];
 
 BOOL gameOverFlag;
 BOOL robotFlag;
+
+int xSize;
+int ySize;
 
 /* USER CODE END PV */
 
@@ -115,6 +118,11 @@ static void MX_SDMMC2_SD_Init(void);
 static void MX_TIM7_Init(void);
 /* USER CODE BEGIN PFP */
 
+BOOL printTemperature();
+void pushButtonTask();
+void gameOverTask();
+void endGameValidation(int playerTurn,int possiblePlaces,int* timeOutCounter);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -123,7 +131,7 @@ static void MX_TIM7_Init(void);
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* adcHandle)
 {
 	if(adcHandle==&hadc1)
-		ConvertedValue=HAL_ADC_GetValue(&hadc1);
+		convertedValue=HAL_ADC_GetValue(&hadc1);
 }
 
 
@@ -177,14 +185,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
-	uint32_t JTemp;
-	char tempString[STRSIZE];
-
-	int xSize;
-	int ySize;
-
 	int playerTurnCopy;
-	//char tsString[20];
 
   /* USER CODE END 1 */
   
@@ -264,30 +265,17 @@ int main(void)
 
 	  if(timerFlag){
 
-		timerFlag=FALSE;
+		timerFlag=printTemperature();
 
-		JTemp = ((((ConvertedValue * VREF)/MAX_CONVERTED_VALUE) - VSENS_AT_AMBIENT_TEMP) * 10 / AVG_SLOPE) + AMBIENT_TEMP;
-		/* Display the Temperature Value on the LCD */
-		sprintf(tempString, "Temp: %ld deg. Celsius ", JTemp);
-		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-		BSP_LCD_SetFont(&Font12);
-		BSP_LCD_SetTextColor(LCD_COLOR_DARKMAGENTA);
-		BSP_LCD_DisplayStringAt(0, ySize-10, (uint8_t *)tempString,RIGHT_MODE);
-		}
+	  }
 
 	  if(gameOverFlag){
 
-		  printEndMessage();
-		  timeOutCounter[0]=0;
-		  timeOutCounter[1]=0;
+		  gameOverTask();
 
 		  if(pbFlag){
-			  pbFlag=FALSE;
-			  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-			  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
-			  displayMenu=TRUE;
-			  gameOverFlag=FALSE;
 
+			  pushButtonTask();
 		  }
 
 	  }
@@ -319,14 +307,9 @@ int main(void)
 		  playerTurnCopy=playerTurn;
 		  playerTurn = printPlayTime(timerDif, playerTurn, timeOutCounter);
 
-		  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
+		  endGameValidation(playerTurn, possiblePlaces, timeOutCounter);
 
-			  gameOverFlag=TRUE;
-			  refreshBoard();
-
-		  }
-
-		  else{
+		  if(!gameOverFlag){
 
 			  if(playerTurn != playerTurnCopy){
 				  possiblePlaces=findPossiblePlaces(playerTurn);
@@ -344,19 +327,13 @@ int main(void)
 				  gameStats(playerTurn,possiblePlaces);
 				  refreshBoard();
 
-				  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
-					  gameOverFlag=TRUE;
-				  }
+				  endGameValidation(playerTurn, possiblePlaces, timeOutCounter);
 
 			  }
 
 			  if(pbFlag){
 
-				  pbFlag=FALSE;
-				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-				  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
-				  displayMenu=TRUE;
-				  gameOverFlag=FALSE;
+				  pushButtonTask();
 
 			  }
 
@@ -370,10 +347,7 @@ int main(void)
 		  playerTurnCopy=playerTurn;
 		  playerTurn = printPlayTime(timerDif, playerTurn, timeOutCounter);
 
-		  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
-			  gameOverFlag=TRUE;
-			  refreshBoard();
-		  }
+		  endGameValidation(playerTurn, possiblePlaces, timeOutCounter);
 
 		  if(playerTurn != playerTurnCopy){
 			  possiblePlaces=findPossiblePlaces(playerTurn);
@@ -391,18 +365,11 @@ int main(void)
 				  refreshBoard();
 			  }
 
-			  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
-				  gameOverFlag=TRUE;
-			  }
+			  endGameValidation(playerTurn, possiblePlaces, timeOutCounter);
 
 			  if(pbFlag){
 
-				  pbFlag=FALSE;
-				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-				  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
-				  displayMenu=TRUE;
-				  gameOverFlag=FALSE;
-				  robotFlag=FALSE;
+				  pushButtonTask();
 
 			  }
 
@@ -415,17 +382,13 @@ int main(void)
 			  gameStats(playerTurn,possiblePlaces);
 			  refreshBoard();
 
-			  if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
-				  gameOverFlag=TRUE;
-			  }
+			  endGameValidation(playerTurn, possiblePlaces, timeOutCounter);
+
 
 			  if(pbFlag){
-				  pbFlag=FALSE;
-				  BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
-				  BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
-				  displayMenu=TRUE;
-				  gameOverFlag=FALSE;
-				  robotFlag=FALSE;
+
+				  pushButtonTask();
+
 			  }
 		  }
 
@@ -977,6 +940,53 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+BOOL printTemperature(){
+
+	uint32_t JTemp;
+	char tempString[STRSIZE];
+
+	JTemp = ((((convertedValue * VREF)/MAX_CONVERTED_VALUE) - VSENS_AT_AMBIENT_TEMP) * 10 / AVG_SLOPE) + AMBIENT_TEMP;
+
+	sprintf(tempString, "Temp: %ld deg. Celsius ", JTemp);
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_SetFont(&Font12);
+	BSP_LCD_SetTextColor(LCD_COLOR_DARKMAGENTA);
+
+	BSP_LCD_DisplayStringAt(0, ySize-10, (uint8_t *)tempString,RIGHT_MODE);
+
+	return FALSE;
+
+}
+
+void pushButtonTask(){
+
+
+	pbFlag=FALSE;
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
+	displayMenu=TRUE;
+	gameOverFlag=FALSE;
+	robotFlag=FALSE;
+}
+
+void gameOverTask(){
+
+	  printEndMessage();
+	  timeOutCounter[0]=0;
+	  timeOutCounter[1]=0;
+
+}
+
+void endGameValidation(int playerTurn,int possiblePlaces,int* timeOutCounter){
+	if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
+
+		  gameOverFlag=TRUE;
+		  refreshBoard();
+
+	}
+}
+
 
 /* USER CODE END 4 */
 

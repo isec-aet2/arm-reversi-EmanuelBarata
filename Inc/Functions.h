@@ -94,7 +94,6 @@ void writeGameInfoSD (char * player, char * reason, char * score);
 
 int robotChoice(int possibleMoves);
 
-BOOL printTemperature(int convertedValue);
 
 #ifdef __cplusplus
 extern "C" {
