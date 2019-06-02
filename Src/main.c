@@ -979,12 +979,16 @@ void gameOverTask(){
 }
 
 void endGameValidation(int playerTurn,int possiblePlaces,int* timeOutCounter){
+
+	HAL_ADC_Stop_IT(&hadc1);
+
 	if(endGame(playerTurn, possiblePlaces, timeOutCounter)){
 
 		  gameOverFlag=TRUE;
 		  refreshBoard();
 
 	}
+	HAL_ADC_Start_IT(&hadc1);
 }
 
 

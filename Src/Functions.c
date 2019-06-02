@@ -752,11 +752,11 @@ void writeGameInfoSD (char * player, char * reason, char * score){
 	char string1[STRSIZE*3];
 
 	sprintf(string1, player);
-	//sprintf(string1, "\n");
-	//sprintf(string1,reason);
-	//sprintf(string1,"\n");
-	//sprintf(string1, score);
-	//sprintf(string1,"\n");
+
+	strcat(string1," ");
+	strcat(string1, reason);
+	strcat(string1," ");
+	strcat(string1,score);
 
 
     if(f_mount (&SDFatFS, SDPath, 0)!=FR_OK){
@@ -767,7 +767,14 @@ void writeGameInfoSD (char * player, char * reason, char * score){
 
     HAL_Delay(100);
 
-    if(f_open (&SDFile, "Res.txt", FA_WRITE | FA_CREATE_ALWAYS )!=FR_OK){
+//    if(f_open (&SDFile, "Res.txt", FA_WRITE | FA_CREATE_ALWAYS )!=FR_OK){
+//        Error_Handler();
+//        BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+//        BSP_LCD_FillCircle(660, 400, 10);
+//    }
+
+
+    if(f_open (&SDFile, "Res.txt", FA_OPEN_APPEND | FA_WRITE )!=FR_OK){
         Error_Handler();
         BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
         BSP_LCD_FillCircle(660, 400, 10);
