@@ -175,6 +175,7 @@ void gameStats(int player, int possibleMoves){
 	char timePlay[STRSIZE];
 	char p1Score[STRSIZE];
 	char p2Score[STRSIZE];
+	char timeArr[STRSIZE];
 
 	int xSize = BSP_LCD_GetXSize();
 
@@ -223,6 +224,12 @@ void gameStats(int player, int possibleMoves){
 	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+300, (uint8_t*) p1Score, LEFT_MODE);
 	BSP_LCD_DisplayStringAt(STATSX0	, boardY0+350, (uint8_t*) p2Score, LEFT_MODE);
 
+	BSP_LCD_FillRect(STATSX0, boardY0+40, 200, 40);
+	BSP_LCD_SetBackColor(0xFF606060);
+	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+	sprintf(timeArr,"CLEAR GAME TIME");
+	BSP_LCD_DisplayStringAt(STATSX0+15	, boardY0+55, (uint8_t*) timeArr, LEFT_MODE);
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 
 }
 
@@ -757,6 +764,7 @@ void writeGameInfoSD (char * player, char * reason, char * score){
 	strcat(string1, reason);
 	strcat(string1," ");
 	strcat(string1,score);
+	strcat(string1," ");
 
 
     if(f_mount (&SDFatFS, SDPath, 0)!=FR_OK){

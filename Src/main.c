@@ -103,6 +103,8 @@ BOOL robotFlag;
 int xSize;
 int ySize;
 
+int gameTurn=0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -122,7 +124,8 @@ BOOL printTemperature();
 void pushButtonTask();
 void gameOverTask();
 void endGameValidation(int playerTurn,int possiblePlaces,int* timeOutCounter);
-
+void clearGameTime(int posX, int posY);
+void sdCardLog(int player, int time, int turn);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -301,6 +304,7 @@ int main(void)
 
 	  else if (!robotFlag){
 
+
 		  possiblePlaces=findPossiblePlaces(playerTurn);
 
 		  printTotalGameTime(timer7Counter);
@@ -320,6 +324,13 @@ int main(void)
 			  if(tsFlag){
 
 				  tsFlag=0;
+				  gameTurn++;
+
+
+				  sdCardLog(playerTurn, timer7Counter, gameTurn);
+
+				  clearGameTime((int)TS_State.touchX[0], (int)TS_State.touchY[0]);
+
 				  timerDif=0;
 
 				  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
@@ -358,7 +369,14 @@ int main(void)
 		  if(playerTurn==PLAYERWHITE){
 
 			  if(tsFlag){
+
+				  gameTurn++;
+				  sdCardLog(playerTurn, timer7Counter, gameTurn);
+
 				  tsFlag=0;
+
+				  clearGameTime((int)TS_State.touchX[0], (int)TS_State.touchY[0]);
+
 				  timerDif=0;
 				  playerTurn=placePiece((int)TS_State.touchX[0], (int)TS_State.touchY[0],playerTurn);
 				  gameStats(playerTurn,possiblePlaces);
@@ -376,6 +394,10 @@ int main(void)
 		  }
 
 		  if(playerTurn==PLAYERBLACK){
+
+			  gameTurn++;
+
+			  sdCardLog(playerTurn, timer7Counter, gameTurn);
 
 			  timerDif=0;
 			  playerTurn=robotChoice(possiblePlaces);
@@ -961,13 +983,13 @@ BOOL printTemperature(){
 
 void pushButtonTask(){
 
-
 	pbFlag=FALSE;
 	BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
 	BSP_LCD_FillRect(boardX0-1, boardY0, xSize-(boardX0-1), ySize-boardY0);
 	displayMenu=TRUE;
 	gameOverFlag=FALSE;
 	robotFlag=FALSE;
+	gameTurn=0;
 }
 
 void gameOverTask(){
@@ -991,6 +1013,48 @@ void endGameValidation(int playerTurn,int possiblePlaces,int* timeOutCounter){
 	HAL_ADC_Start_IT(&hadc1);
 }
 
+void clearGameTime(int posX, int posY){
+
+	if(posX>=STATSX0 && posX<STATSX0+200){
+		if(posY>=boardY0+40 && posY < boardY0+80){
+
+			timer7Counter = 0;
+
+		}
+	}
+
+
+
+}
+
+void sdCardLog(int player, int time, int turn){
+
+	char playerStr[STRSIZE];
+	char timeGameStr[STRSIZE];
+	char gameTurnStr[STRSIZE];
+
+	if(player==PLAYERWHITE){
+
+		sprintf(playerStr, "WHITE SNOW");
+
+	}
+
+	else{
+
+		sprintf(playerStr,"SIRIUS BLACK");
+
+	}
+
+
+	sprintf(timeGameStr, "GAME TIME: %i", time);
+	sprintf(gameTurnStr, "GAME TURN: %i", turn);
+
+	HAL_ADC_Stop_IT(&hadc1);
+
+	writeGameInfoSD (playerStr, timeGameStr, gameTurnStr);
+
+	HAL_ADC_Start_IT(&hadc1);
+}
 
 /* USER CODE END 4 */
 
